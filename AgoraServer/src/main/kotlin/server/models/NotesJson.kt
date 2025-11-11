@@ -1,0 +1,24 @@
+package server.models
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+class NotesJson(
+    val id: Int,
+    val title: String,
+    val type: String,
+    val length: Int,
+    val userId: Int,
+) {
+    override fun toString(): String {
+        return """
+{
+    "id":"$id",
+    "title":"$title",
+    "length":"$length",
+    "type":"$type",
+    "userId":"$userId"
+}
+        """.trimIndent()
+    }
+}
