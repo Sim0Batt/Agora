@@ -25,7 +25,7 @@ fun Application.module() {
     routing {
         //Users Management
         get("/user") {
-            call.respondText(QueryManager.getUsers().joinToString("\n"))
+            call.respondText(QueryManager.getUsers().joinToString(";\n"))
         }
         post("/user") {
             val credentials = call.receive<UserJson>()
@@ -52,14 +52,14 @@ fun Application.module() {
 
         //Notes Management
         get("/note") {
-            val result = QueryManager.getNotes().joinToString("\n")
+            val result = QueryManager.getNotes().joinToString(";\n")
             println(result)
             call.respondText(result)
         }
 
         get("/note/{id}") {
             val userId = call.parameters["id"].toString().toInt()
-            val result = QueryManager.getUserNotes(userId).joinToString("\n")
+            val result = QueryManager.getUserNotes(userId).joinToString(";\n")
             println(result)
             call.respondText(result)
         }

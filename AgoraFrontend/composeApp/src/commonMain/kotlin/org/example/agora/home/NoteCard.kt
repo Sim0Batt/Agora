@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.example.agora.LocalNavigator
 
 @Composable
 fun NoteCard(
@@ -22,21 +23,25 @@ fun NoteCard(
     title: String,
     length: Int,
     savedPath: String,
-    onClick: () -> Unit,
-    colorPalette: ColorScheme
+    colorPalette: ColorScheme,
+    noteId: Int,
+    type: String
 ) {
+    val navigator = LocalNavigator.current
     ElevatedCard(
         elevation = CardDefaults.cardElevation(
             defaultElevation = 6.dp
         ),
         colors = CardColors(
-            colorPalette.secondary,
+            if(type == "University") Color(43, 74, 117) else colorPalette.secondary,
             colorPalette.primary,
-            colorPalette.primary.copy(alpha = 0.3f),
+            if(type == "University") Color(43, 74, 117) else colorPalette.secondary.copy(alpha = 0.3f),
             colorPalette.primary
         ),
         modifier = Modifier.size(width = 350.dp, height = 200.dp),
-        onClick = onClick,
+        onClick = {
+            navigator.navigate("editNote", noteId = noteId)
+        },
     ) {
         Text(
             text = title,

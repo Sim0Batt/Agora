@@ -4,6 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -12,6 +13,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.example.agora.server.models.CreateNoteJson
 import org.example.agora.server.models.NotesJson
 
 object ServerRequests {
@@ -24,32 +26,57 @@ object ServerRequests {
             })
         }
         install(HttpTimeout) {
-            requestTimeoutMillis = 5000 // 15 seconds
-            connectTimeoutMillis = 5000 // 15 seconds
-            socketTimeoutMillis = 5000 // 15 seconds
+            requestTimeoutMillis = 5000
+            connectTimeoutMillis = 5000
+            socketTimeoutMillis = 5000
         }
     }
 
-    const val URL = "0.0.0.0:8080"
-
     suspend fun getNotes(userId: String): List<NotesJson>{
-        val url = "http://$URL/note/$userId"
+        val url = "http://0.0.0.0:8080/note/$userId"
+
         try {
             val rawResponse: String = client.get(url).bodyAsText()
 
-            if (rawResponse.isBlank()) return emptyList()
+            val jsonStrings: List<String> = rawResponse.split(";\n")
 
-            val trimmed = rawResponse.trim()
+            val notes: List<NotesJson> = jsonStrings
+                .filter { it.isNotBlank() }
+                .map { jsonString ->
+                    Json.decodeFromString<NotesJson>(jsonString)
+                }
 
-            val jsonContent = trimmed.replace(Regex("\\}\\s*\\{"), "},{")
-
-            val jsonArrayString = "[$jsonContent]"
-
-            return Json.decodeFromString<List<NotesJson>>(jsonArrayString)
-
+            return notes
         } catch (e: Exception) {
-            println("Errore nel parsing: ${e.message}")
+            println("Errore nel parsing del NotesJson: ${e.message}")
             return emptyList()
+        }
+    }
+
+    suspend fun deleteNote(noteId: Int): String{
+        val url = "http://0.0.0.0:8080/note/$noteId"
+
+        try {
+            client.delete(url).bodyAsText()
+            return "success"
+        } catch (e: Exception) {
+            println("Errore nella rimozione della Nota: ${e.message}")
+            return "failure"
+        }
+    }
+
+    suspend fun createNote(createNoteJson: CreateNoteJson): String{
+        val url = "http://0.0.0.0:8080/note"
+
+        try {
+            client.post(url){
+                contentType(ContentType.Application.Json)
+                setBody(createNoteJson)
+            }
+            return "success"
+        } catch (e: Exception) {
+            println("Errore nella rimozione della Nota: ${e.message}")
+            return "failure"
         }
     }
 }

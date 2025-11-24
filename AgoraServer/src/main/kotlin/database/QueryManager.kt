@@ -112,6 +112,7 @@ object QueryManager {
                 it[NotesTable.type] = notesJson.type
                 it[NotesTable.length] = notesJson.length
                 it[NotesTable.userId] = notesJson.userId
+                it[NotesTable.path] = notesJson.path
             }
         }
     }

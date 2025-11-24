@@ -13,9 +13,9 @@ object LatexConverter {
         var convertedText = ""
         text.split("\n").forEach { line ->
             if(checkUpperCase(line) && line.isNotEmpty() && !line.contains("CODE")){
-                convertedText += "\\subsection{${line.lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }}}"
+                convertedText += "\n\\subsection{${line.lowercase().replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }}}\n"
             }else{
-                if(line.split("").first().startsWith('-')){
+                if(line.startsWith('-')){
                     if(!startedItemize){
                         convertedText += "\n\\begin{itemize}\n"
                         startedItemize = true
@@ -25,8 +25,7 @@ object LatexConverter {
                     convertedText += "\\end{itemize}\n"
                     convertedText += formatItalicAndBold(line)
                     startedItemize = false
-                }
-                if(line.contains("CODE")){
+                }else if(line.trim() == "CODE"){
                     if(!startedCode){
                         convertedText += "\n\\begin{lstlisting}\n"
                         startedCode = true
@@ -34,13 +33,11 @@ object LatexConverter {
                         convertedText += "\n\\end{lstlisting}\n"
                         startedCode = false
                     }
-                }
-
-                else{
-                    if(startedCode){
-                        convertedText += line + "\n"
+                } else{
+                    convertedText += if(startedCode){
+                        line + "\n"
                     }else{
-                        convertedText += formatItalicAndBold(line) + "\\\\ \n"
+                        formatItalicAndBold(line) + "\\\\ \n"
                     }
                 }
             }
@@ -65,8 +62,12 @@ object LatexConverter {
             "\\textit{${matchResult.groupValues[1]}}"
         }
 
-        processed = processed.replace(Regex("(?<!\\.)\\b([A-Z0-9À-Ö]+(?:\\s+[A-Z0-9À-Ö]+)*)\\b")) { matchResult ->
-            "\\textbf{${matchResult.value.lowercase()}}"
+        processed = processed.replace(Regex("(?<!\\.)\\b([A-ZÀ-Ö]{2,}(?:\\s+[A-ZÀ-Ö]{2,})*)\\b")) { matchResult ->
+            if(matchResult.value.length > 3){
+                "\\textbf{${matchResult.value.lowercase()}}"
+            }else{
+                "\\textbf{${matchResult.value}}"
+            }
         }
         return processed
     }

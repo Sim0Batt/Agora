@@ -1,5 +1,6 @@
 package org.example.agora
 
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
@@ -15,6 +16,11 @@ fun main() = application {
         )
     ) {
         val settingsRepository = SettingsRepository()
-        App(settingsRepository = settingsRepository)
+        val fileSaver = DesktopFileSaver
+        App(
+            settingsRepository = settingsRepository,
+            modifier = Modifier,
+            fileSaver = fileSaver
+        )
     }
 }

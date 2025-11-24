@@ -13,9 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import org.example.agora.editor.EditorPage
+import org.example.agora.editor.NotesPage
 import org.example.agora.editor.NewNotePage
+import org.example.agora.editor.NotesEditor
 import org.example.agora.home.HomePage
+import org.example.agora.settings.FileSaver
 import org.example.agora.settings.SettingsPage
 import org.example.agora.settings.SettingsRepository
 
@@ -42,39 +44,47 @@ private val SemiDarkColorPalette = darkColorScheme(
 @Preview
 fun App(
     modifier: Modifier = Modifier,
-    settingsRepository: SettingsRepository
+    settingsRepository: SettingsRepository,
+    fileSaver: FileSaver
 ) {
     var selectedRoute by remember { mutableStateOf("home") }
+    var navigator by remember { mutableStateOf(Navigator()) }
 
-    Surface(
-        modifier = modifier.fillMaxSize(),
-        color = DarkColorPalette.background
-    ) {
-        Row (Modifier.fillMaxSize()){
-            NavBar(
-                selectedRoute = selectedRoute,
-                onRouteSelected = { route ->
-                    selectedRoute = route
-                },
-                modifier = Modifier.width(240.dp),
-                SemiDarkColorPalette
-            )
 
-            Box(
-                modifier = Modifier.weight(1f).padding(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                when (selectedRoute) {
-                    "home" -> HomePage(
-                        DarkColorPalette,
-                        modifier = Modifier.fillMaxHeight(),
-                        editorCardOnClick = { selectedRoute = "editor" },
-                        newPageOnClick = { selectedRoute = "new_page" },
-                        settingsOnClick = { selectedRoute = "settings" }
-                    )
-                    "editor" -> EditorPage(modifier ,DarkColorPalette)
-                    "settings" -> SettingsPage(settingsRepository, modifier, DarkColorPalette)
-                    "new_page" -> NewNotePage(modifier, DarkColorPalette)
+    CompositionLocalProvider(LocalNavigator provides navigator){
+        Surface(
+            modifier = modifier.fillMaxSize(),
+            color = DarkColorPalette.background
+        ) {
+            Row(Modifier.fillMaxSize()) {
+                NavBar(
+                    selectedRoute = navigator.currentRoute,
+                    onRouteSelected = { route ->
+                        navigator.navigate(route)
+                    },
+                    modifier = Modifier.width(240.dp),
+                    SemiDarkColorPalette
+                )
+
+                Box(
+                    modifier = Modifier.weight(1f).padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    when (navigator.currentRoute) {
+                        "home" -> HomePage(
+                            DarkColorPalette,
+                            modifier = Modifier.fillMaxHeight(),
+                        )
+
+                        "notes" -> NotesPage(
+                            modifier,
+                            DarkColorPalette,
+                        )
+
+                        "settings" -> SettingsPage(settingsRepository, modifier, DarkColorPalette)
+                        "new_page" -> NewNotePage(modifier, DarkColorPalette, settingsRepository, fileSaver)
+                        "editNote" -> NotesEditor( DarkColorPalette, modifier, settingsRepository, navigator.currentNoteId!!, fileSaver)
+                    }
                 }
             }
         }

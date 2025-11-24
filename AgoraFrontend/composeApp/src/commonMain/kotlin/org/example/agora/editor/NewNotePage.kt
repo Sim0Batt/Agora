@@ -18,14 +18,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.runBlocking
 import org.example.agora.ButtonCard
 import org.example.agora.home.ActionCard
+import org.example.agora.server.ServerRequests
+import org.example.agora.server.models.CreateNoteJson
+import org.example.agora.settings.FileSaver
+import org.example.agora.settings.SettingsRepository
 
 
 @Composable
 fun NewNotePage(
     modifier: Modifier = Modifier,
-    colorPalette: ColorScheme
+    colorPalette: ColorScheme,
+    settingsRepository: SettingsRepository,
+    fileSaver: FileSaver
 ){
     val typeString = remember { mutableStateOf("") }
     val titleString = remember { mutableStateOf("") }
@@ -70,25 +77,6 @@ fun NewNotePage(
             //Note Description
             Text(
                 modifier = Modifier.padding(20.dp).fillMaxWidth(),
-                text = "Description",
-                color = colorPalette.primary,
-                textAlign = TextAlign.Start,
-                fontSize = MaterialTheme.typography.displaySmall.fontSize,
-            )
-            OutlinedTextField(
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = colorPalette.primary,
-                    unfocusedContainerColor = colorPalette.primary,
-                ),
-                value = descriptionString.value,
-                onValueChange = {newText: String -> descriptionString.value = newText},
-                label = { "Scrivi qualcosa qui..." },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            //Note Description
-            Text(
-                modifier = Modifier.padding(20.dp).fillMaxWidth(),
                 text = "Type of Note",
                 color = colorPalette.primary,
                 textAlign = TextAlign.Start,
@@ -113,7 +101,19 @@ fun NewNotePage(
                 Modifier.padding(0.dp, 40.dp, 0.dp, 40.dp).fillMaxWidth(),
                 "CREATE NOTE",
                 {
-                    println("Saved Note: ${titleString.value}, ${descriptionString.value}, ${typeString.value}")
+                    runBlocking {
+                        ServerRequests.createNote(
+                            CreateNoteJson(
+                                titleString.value,
+                                typeString.value,
+                                0,
+                                1,
+                                settingsRepository.getSavePathFlow("/home/USER/documents/") + titleString.value.trim() + ".txt"
+                            )
+                        )
+                    }
+                    fileSaver.saveNoteToDisk("", settingsRepository.getSavePathFlow("/home/USER/documents/") + titleString.value.trim() + ".txt")
+
                 },
                 colorPalette
             )

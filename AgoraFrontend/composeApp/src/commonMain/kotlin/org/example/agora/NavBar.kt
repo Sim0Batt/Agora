@@ -26,8 +26,8 @@ private val navItems = listOf(
         title = "Home",
     ),
     NavItem(
-        route = "editor",
-        title = "Editor",
+        route = "notes",
+        title = "Notes",
     ),
     NavItem(
         route = "settings",
@@ -42,7 +42,6 @@ fun NavBar(
     modifier: Modifier = Modifier,
     colorSchema: ColorScheme
 ) {
-    // Surface dona sfondo (preso dal tema) ed elevazione (ombra)
     Surface(
         modifier = modifier.fillMaxHeight(),
         color = colorSchema.background, // Colore di sfondo
