@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    kotlin("plugin.serialization") version "2.2.20"
 }
 
 kotlin {
@@ -42,6 +43,22 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+
+            //Settings
+            implementation("com.russhwolf:multiplatform-settings:1.3.")
+            implementation("com.russhwolf:multiplatform-settings-no-arg:1.3.0")
+
+            //  Ktor
+            implementation("io.ktor:ktor-client-core:2.3.7")
+            implementation("io.ktor:ktor-client-cio:2.3.7")
+            implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
+            implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
+
+            // Serialization (va bene)
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
+            implementation("org.slf4j:slf4j-api:1.7.25")
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -81,6 +98,8 @@ android {
 }
 
 dependencies {
+
+
     debugImplementation(compose.uiTooling)
     implementation(compose.materialIconsExtended)
 }

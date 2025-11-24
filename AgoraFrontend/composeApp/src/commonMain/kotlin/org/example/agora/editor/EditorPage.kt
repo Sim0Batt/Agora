@@ -9,5 +9,4 @@ fun EditorPage (
     modifier: Modifier = Modifier,
     colorPalette: ColorScheme
 ){
-
 }

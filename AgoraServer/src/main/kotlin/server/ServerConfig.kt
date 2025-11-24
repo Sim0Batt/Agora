@@ -52,12 +52,16 @@ fun Application.module() {
 
         //Notes Management
         get("/note") {
-            call.respondText(QueryManager.getNotes().joinToString("\n"))
+            val result = QueryManager.getNotes().joinToString("\n")
+            println(result)
+            call.respondText(result)
         }
 
         get("/note/{id}") {
             val userId = call.parameters["id"].toString().toInt()
-            call.respondText(QueryManager.getUserNotes(userId).joinToString("\n"))
+            val result = QueryManager.getUserNotes(userId).joinToString("\n")
+            println(result)
+            call.respondText(result)
         }
 
         delete("/note/{id}") {

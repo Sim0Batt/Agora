@@ -17,6 +17,7 @@ import org.example.agora.editor.EditorPage
 import org.example.agora.editor.NewNotePage
 import org.example.agora.home.HomePage
 import org.example.agora.settings.SettingsPage
+import org.example.agora.settings.SettingsRepository
 
 
 private val LightColorPalette = lightColorScheme(
@@ -40,7 +41,8 @@ private val SemiDarkColorPalette = darkColorScheme(
 @Composable
 @Preview
 fun App(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    settingsRepository: SettingsRepository
 ) {
     var selectedRoute by remember { mutableStateOf("home") }
 
@@ -67,10 +69,11 @@ fun App(
                         DarkColorPalette,
                         modifier = Modifier.fillMaxHeight(),
                         editorCardOnClick = { selectedRoute = "editor" },
-                        newPageOnClick = { selectedRoute = "new_page" }
+                        newPageOnClick = { selectedRoute = "new_page" },
+                        settingsOnClick = { selectedRoute = "settings" }
                     )
                     "editor" -> EditorPage(modifier ,DarkColorPalette)
-                    "settings" -> SettingsPage(modifier, DarkColorPalette)
+                    "settings" -> SettingsPage(settingsRepository, modifier, DarkColorPalette)
                     "new_page" -> NewNotePage(modifier, DarkColorPalette)
                 }
             }

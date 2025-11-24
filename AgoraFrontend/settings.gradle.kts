@@ -1,4 +1,4 @@
-rootProject.name = "agora"
+rootProject.name = "AgoraFrontend"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {

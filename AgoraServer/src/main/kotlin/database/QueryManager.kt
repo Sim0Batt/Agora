@@ -69,6 +69,7 @@ object QueryManager {
                         note[NotesTable.title],
                         note[NotesTable.type],
                         note[NotesTable.length],
+                        note[NotesTable.path],
                         note[NotesTable.userId]
                     )
                 )
@@ -89,6 +90,7 @@ object QueryManager {
                         note[NotesTable.title],
                         note[NotesTable.type],
                         note[NotesTable.length],
+                        note[NotesTable.path],
                         note[NotesTable.userId]
                     )
                 )

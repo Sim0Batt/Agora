@@ -4,6 +4,7 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
+import org.example.agora.settings.SettingsRepository
 
 fun main() = application {
     Window(
@@ -13,6 +14,7 @@ fun main() = application {
             placement = WindowPlacement.Maximized
         )
     ) {
-        App()
+        val settingsRepository = SettingsRepository()
+        App(settingsRepository = settingsRepository)
     }
 }
