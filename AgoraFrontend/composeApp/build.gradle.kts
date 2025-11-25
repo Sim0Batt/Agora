@@ -66,6 +66,33 @@ kotlin {
             implementation(libs.kotlinx.coroutinesSwing)
         }
     }
+
+    // Target per Linux
+    linuxX64 {
+        binaries {
+            executable {
+                entryPoint = "main"
+                baseName = "Agorà"
+            }
+        }
+    }
+
+    // Target per Windows
+    mingwX64 {
+        binaries {
+            executable {
+                entryPoint = "main"
+                baseName = "Agorà"
+            }
+        }
+    }
+
+    // Codice comune
+    sourceSets {
+        val commonMain by getting
+        val linuxX64Main by getting
+        val mingwX64Main by getting
+    }
 }
 
 android {

@@ -31,16 +31,18 @@ object ServerRequests {
             socketTimeoutMillis = 5000
         }
     }
-
+    const val URL = "13.60.112.248:8080"
     suspend fun getNotes(userId: String): List<NotesJson>{
-        val url = "http://0.0.0.0:8080/note/$userId"
+        val url = "http://$URL/note/$userId"
 
         try {
             val rawResponse: String = client.get(url).bodyAsText()
 
             val jsonStrings: List<String> = rawResponse.split(";\n")
 
-            val notes: List<NotesJson> = jsonStrings
+            val parsedStrings: List<String> = jsonStrings.map { it.replace("\\", "\\\\") }
+
+            val notes: List<NotesJson> = parsedStrings
                 .filter { it.isNotBlank() }
                 .map { jsonString ->
                     Json.decodeFromString<NotesJson>(jsonString)
@@ -54,7 +56,7 @@ object ServerRequests {
     }
 
     suspend fun deleteNote(noteId: Int): String{
-        val url = "http://0.0.0.0:8080/note/$noteId"
+        val url = "http://$URL/note/$noteId"
 
         try {
             client.delete(url).bodyAsText()
@@ -66,7 +68,7 @@ object ServerRequests {
     }
 
     suspend fun createNote(createNoteJson: CreateNoteJson): String{
-        val url = "http://0.0.0.0:8080/note"
+        val url = "http://$URL/note"
 
         try {
             client.post(url){
