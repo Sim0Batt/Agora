@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import org.example.agora.converter.ConverterPage
 import org.example.agora.editor.NotesPage
 import org.example.agora.editor.NewNotePage
 import org.example.agora.editor.NotesEditor
@@ -84,6 +85,7 @@ fun App(
                         "settings" -> SettingsPage(settingsRepository, modifier, DarkColorPalette)
                         "new_page" -> NewNotePage(modifier, DarkColorPalette, settingsRepository, fileSaver)
                         "editNote" -> NotesEditor( DarkColorPalette, modifier, settingsRepository, navigator.currentNoteId!!, fileSaver)
+                        "converter" -> ConverterPage( DarkColorPalette, modifier)
                     }
                 }
             }

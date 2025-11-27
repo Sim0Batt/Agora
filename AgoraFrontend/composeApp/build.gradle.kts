@@ -45,7 +45,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
 
             //Settings
-            implementation("com.russhwolf:multiplatform-settings:1.3.")
+            implementation("com.russhwolf:multiplatform-settings:1.3.0")
             implementation("com.russhwolf:multiplatform-settings-no-arg:1.3.0")
 
             //  Ktor

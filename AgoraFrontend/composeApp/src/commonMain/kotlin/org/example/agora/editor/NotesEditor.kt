@@ -11,6 +11,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.runBlocking
+import org.example.agora.LatexConverter
 import org.example.agora.server.ServerRequests
 import org.example.agora.server.models.CreateNoteJson
 import org.example.agora.server.models.NotesJson
@@ -70,16 +71,16 @@ fun NotesEditor(
                 colors = ButtonDefaults.buttonColors(containerColor = colorPalette.primary),
                 onClick = {
                     runBlocking {
-                        ServerRequests.deleteNote(selectedNote.id)
-                        ServerRequests.createNote(
-                            CreateNoteJson(
-                                title,
-                                selectedNote.type,
-                                content.length,
-                                selectedNote.userId,
-                                selectedNote.savedPath
-                            )
-                        )
+//                        ServerRequests.deleteNote(selectedNote.id)
+//                        ServerRequests.createNote(
+//                            CreateNoteJson(
+//                                title,
+//                                selectedNote.type,
+//                                content.length,
+//                                selectedNote.userId,
+//                                selectedNote.savedPath
+//                            )
+//                        )
                         fileSaver.saveNoteToDisk(content, selectedNote.savedPath)
                     }
                 }

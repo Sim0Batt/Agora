@@ -30,6 +30,10 @@ private val navItems = listOf(
         title = "Notes",
     ),
     NavItem(
+        route = "converter",
+        title = "Converter",
+    ),
+    NavItem(
         route = "settings",
         title = "Settings",
     )

@@ -1,6 +1,4 @@
-package org.example.agora.editor
-
-import kotlin.jvm.JvmStatic
+package org.example.agora
 
 object LatexConverter {
     fun convert(text: String): String {
