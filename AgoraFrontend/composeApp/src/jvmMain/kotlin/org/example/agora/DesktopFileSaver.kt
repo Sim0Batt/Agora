@@ -16,10 +16,17 @@ object DesktopFileSaver: FileSaver {
 
     }
 
+    override fun fileExists(path: String): Boolean {
+        return File(path).exists()
+    }
+
     override fun saveNoteToDisk(content: String, path: String) {
         if(!File(path).exists()) {
             Path(path).createFile()
         }
         File(path).writeText(content)
     }
+
+
+
 }

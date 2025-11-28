@@ -75,11 +75,13 @@ fun App(
                         "home" -> HomePage(
                             DarkColorPalette,
                             modifier = Modifier.fillMaxHeight(),
+                            fileSaver
                         )
 
                         "notes" -> NotesPage(
                             modifier,
                             DarkColorPalette,
+                            fileSaver,
                         )
 
                         "settings" -> SettingsPage(settingsRepository, modifier, DarkColorPalette)

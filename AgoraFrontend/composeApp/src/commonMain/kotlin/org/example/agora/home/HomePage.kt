@@ -24,17 +24,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import org.example.agora.LocalNavigator
+import org.example.agora.settings.FileSaver
 
 @Composable
 fun HomePage(
     colorPalette: ColorScheme,
     modifier: Modifier = Modifier,
+    fileSaver: FileSaver
 ){
     var notesList by remember { mutableStateOf<List<NotesJson>>(emptyList()) }
 
     LaunchedEffect(Unit) {
         try {
-            notesList = ServerRequests.getNotes("1").reversed().take(3)
+            notesList = ServerRequests.getNotes("1", fileSaver).reversed().take(3)
         } catch (e: Exception) {
             println("Errore nel caricamento delle note: ${e.message}")
         }

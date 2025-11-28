@@ -37,7 +37,7 @@ fun NotesEditor(
 
     LaunchedEffect(Unit) {
         try {
-            notesList = ServerRequests.getNotes("1").reversed().take(3)
+            notesList = ServerRequests.getNotes("1", fileSaver).reversed().take(3)
             notesList.map {
                 if (it.id == noteId) selectedNote = it
             }

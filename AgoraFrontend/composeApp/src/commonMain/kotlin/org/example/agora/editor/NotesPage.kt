@@ -22,17 +22,19 @@ import androidx.compose.ui.unit.dp
 import org.example.agora.home.NoteCard
 import org.example.agora.server.ServerRequests
 import org.example.agora.server.models.NotesJson
+import org.example.agora.settings.FileSaver
 
 @Composable
 fun NotesPage (
     modifier: Modifier = Modifier,
     colorPalette: ColorScheme,
+    fileSaver: FileSaver
 ){
     var notesList by remember { mutableStateOf<List<NotesJson>>(emptyList()) }
 
     LaunchedEffect(Unit) {
         try {
-            notesList = ServerRequests.getNotes("1")
+            notesList = ServerRequests.getNotes("1", fileSaver)
         } catch (e: Exception) {
             println("Errore nel caricamento delle note: ${e.message}")
         }

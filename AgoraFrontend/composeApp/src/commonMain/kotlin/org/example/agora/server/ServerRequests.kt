@@ -15,6 +15,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.example.agora.server.models.CreateNoteJson
 import org.example.agora.server.models.NotesJson
+import org.example.agora.settings.FileSaver
 
 object ServerRequests {
     val client = HttpClient(CIO) {
@@ -31,8 +32,9 @@ object ServerRequests {
             socketTimeoutMillis = 5000
         }
     }
+
     const val URL = "13.60.112.248:8080"
-    suspend fun getNotes(userId: String): List<NotesJson>{
+    suspend fun getNotes(userId: String, fileSaver: FileSaver): List<NotesJson>{
         val url = "http://$URL/note/$userId"
 
         try {
@@ -48,7 +50,7 @@ object ServerRequests {
                     Json.decodeFromString<NotesJson>(jsonString)
                 }
 
-            return notes
+            return notes.filter { fileSaver.fileExists(it.savedPath) }
         } catch (e: Exception) {
             println("Errore nel parsing del NotesJson: ${e.message}")
             return emptyList()
