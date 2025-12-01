@@ -13,11 +13,14 @@ object DesktopFileSaver: FileSaver {
         }else{
             ""
         }
-
     }
 
     override fun fileExists(path: String): Boolean {
         return File(path).exists()
+    }
+
+    override fun deleteFile(path: String) {
+        File(path).delete()
     }
 
     override fun saveNoteToDisk(content: String, path: String) {

@@ -57,6 +57,7 @@ kotlin {
             // Serialization (va bene)
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
             implementation("org.slf4j:slf4j-api:1.7.25")
+            implementation("com.fifesoft:rsyntaxtextarea:3.3.4")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

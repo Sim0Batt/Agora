@@ -13,14 +13,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.runBlocking
 import org.example.agora.ButtonCard
-import org.example.agora.home.ActionCard
+import org.example.agora.LocalNavigator
 import org.example.agora.server.ServerRequests
 import org.example.agora.server.models.CreateNoteJson
 import org.example.agora.settings.FileSaver
@@ -36,8 +34,7 @@ fun NewNotePage(
 ){
     val typeString = remember { mutableStateOf("") }
     val titleString = remember { mutableStateOf("") }
-    val descriptionString = remember { mutableStateOf("") }
-
+    val navigator = LocalNavigator.current
 
 
     Box(modifier = modifier){
@@ -74,7 +71,6 @@ fun NewNotePage(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            //Note Description
             Text(
                 modifier = Modifier.padding(20.dp).fillMaxWidth(),
                 text = "Type of Note",
@@ -113,7 +109,7 @@ fun NewNotePage(
                         )
                     }
                     fileSaver.saveNoteToDisk("", settingsRepository.getSavePathFlow("/home/USER/documents/") + titleString.value.trim() + ".txt")
-
+                    navigator.navigate("notes")
                 },
                 colorPalette
             )

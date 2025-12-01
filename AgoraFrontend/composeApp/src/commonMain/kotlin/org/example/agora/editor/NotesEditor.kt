@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.runBlocking
 import org.example.agora.LatexConverter
+import org.example.agora.LocalNavigator
+import org.example.agora.Navigator
 import org.example.agora.server.ServerRequests
 import org.example.agora.server.models.CreateNoteJson
 import org.example.agora.server.models.NotesJson
@@ -26,7 +28,7 @@ fun NotesEditor(
     noteId: Int = 0,
     fileSaver: FileSaver
 ) {
-    var title by remember { mutableStateOf("") }
+    val navigator = LocalNavigator.current
     var content by remember { mutableStateOf("") }
     var generatedLatex by remember { mutableStateOf("") }
 
@@ -41,7 +43,6 @@ fun NotesEditor(
             notesList.map {
                 if (it.id == noteId) selectedNote = it
             }
-            title = selectedNote.title
             content = fileSaver.getFileText(selectedNote.savedPath)
         } catch (e: Exception) {
             println("Errore nel caricamento delle note: ${e.message}")
@@ -71,21 +72,24 @@ fun NotesEditor(
                 colors = ButtonDefaults.buttonColors(containerColor = colorPalette.primary),
                 onClick = {
                     runBlocking {
-//                        ServerRequests.deleteNote(selectedNote.id)
-//                        ServerRequests.createNote(
-//                            CreateNoteJson(
-//                                title,
-//                                selectedNote.type,
-//                                content.length,
-//                                selectedNote.userId,
-//                                selectedNote.savedPath
-//                            )
-//                        )
                         fileSaver.saveNoteToDisk(content, selectedNote.savedPath)
                     }
                 }
             ) {
                 Text("Salva", color = colorPalette.secondary, fontSize = 16.sp)
+            }
+
+            Button(
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                onClick = {
+                    runBlocking {
+                        ServerRequests.deleteNote(selectedNote.id)
+                        fileSaver.deleteFile(selectedNote.savedPath)
+                        navigator.navigate("home")
+                    }
+                }
+            ) {
+                Text("Elimina", color = colorPalette.primary, fontSize = 16.sp)
             }
 
             OutlinedButton(
@@ -99,23 +103,23 @@ fun NotesEditor(
             }
         }
 
-        OutlinedTextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("Titolo") },
-            placeholder = { Text("Inserisci il titolo...") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            textStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color.White,
-                unfocusedBorderColor = Color.White,
-                focusedLabelColor = Color.White,
-                cursorColor = Color.White,
-                focusedContainerColor = colorPalette.secondary,
-                unfocusedContainerColor = colorPalette.secondary
-            )
-        )
+//        OutlinedTextField(
+//            value = title,
+//            onValueChange = { title = it },
+//            label = { Text("Titolo") },
+//            placeholder = { Text("Inserisci il titolo...") },
+//            singleLine = true,
+//            modifier = Modifier.fillMaxWidth(),
+//            textStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+//            colors = OutlinedTextFieldDefaults.colors(
+//                focusedBorderColor = Color.White,
+//                unfocusedBorderColor = Color.White,
+//                focusedLabelColor = Color.White,
+//                cursorColor = Color.White,
+//                focusedContainerColor = colorPalette.secondary,
+//                unfocusedContainerColor = colorPalette.secondary
+//            )
+//        )
 
         OutlinedTextField(
             value = content,

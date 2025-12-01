@@ -5,4 +5,5 @@ interface FileSaver {
     fun getFileText(path: String): String
 
     fun fileExists(path: String): Boolean
+    fun deleteFile(path: String)
 }
