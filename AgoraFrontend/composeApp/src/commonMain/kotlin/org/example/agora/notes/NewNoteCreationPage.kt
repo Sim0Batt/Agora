@@ -1,4 +1,4 @@
-package org.example.agora.editor
+package org.example.agora.notes
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,8 +21,8 @@ import org.example.agora.ButtonCard
 import org.example.agora.LocalNavigator
 import org.example.agora.server.ServerRequests
 import org.example.agora.server.models.CreateNoteJson
-import org.example.agora.settings.FileSaver
-import org.example.agora.settings.SettingsRepository
+import org.example.agora.utils.FileSaver
+import org.example.agora.utils.SettingsRepository
 
 
 @Composable

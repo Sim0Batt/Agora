@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.example.agora.ButtonCard
-import org.example.agora.editor.DropDownMenu
+import org.example.agora.utils.SettingsRepository
 
 @Composable
 fun SettingsPage (
@@ -64,14 +64,46 @@ fun SettingsPage (
                         pathString.value = newPath
                     }
                 },
-                label = { Text(settingsRepository.getSavePathFlow("/home/USER/documentis/")) },
+                label = { Text(settingsRepository.getSavePathFlow("/home/USER/documents/")) },
                 modifier = Modifier.fillMaxWidth()
             )
             ButtonCard(
                 Modifier.padding(0.dp, 40.dp, 0.dp, 40.dp).fillMaxWidth(),
-                "Save Settings",
+                "Save Documents Path",
                 {
                     settingsRepository.setSavePath(pathString.value)
+                    println("Saved path: ${pathString.value}")
+                },
+                colorPalette
+            )
+
+            Text(
+                modifier = Modifier.padding(20.dp).fillMaxWidth(),
+                text = "PDF Directory Path",
+                color = colorPalette.primary,
+                textAlign = TextAlign.Start,
+                fontSize = MaterialTheme.typography.displaySmall.fontSize,
+            )
+
+            OutlinedTextField(
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = colorPalette.primary,
+                    unfocusedContainerColor = colorPalette.primary,
+                ),
+                value = pathString.value,
+                onValueChange = {newPath: String ->
+                    run {
+                        pathString.value = newPath
+                    }
+                },
+                label = { Text(settingsRepository.getSavePathFlow("/home/USER/documents/pdf/")) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            ButtonCard(
+                Modifier.padding(0.dp, 40.dp, 0.dp, 40.dp).fillMaxWidth(),
+                "Save PDF Path",
+                {
+                    settingsRepository.savePdfPath(pathString.value)
                     println("Saved path: ${pathString.value}")
                 },
                 colorPalette

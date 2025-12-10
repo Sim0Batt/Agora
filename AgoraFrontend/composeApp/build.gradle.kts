@@ -44,20 +44,19 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
 
-            //Settings
+            // Settings
             implementation("com.russhwolf:multiplatform-settings:1.3.0")
             implementation("com.russhwolf:multiplatform-settings-no-arg:1.3.0")
 
-            //  Ktor
+            // Ktor
             implementation("io.ktor:ktor-client-core:2.3.7")
             implementation("io.ktor:ktor-client-cio:2.3.7")
             implementation("io.ktor:ktor-client-content-negotiation:2.3.7")
             implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
 
-            // Serialization (va bene)
+            // Serialization
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
             implementation("org.slf4j:slf4j-api:1.7.25")
-            implementation("com.fifesoft:rsyntaxtextarea:3.3.4")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -65,6 +64,14 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+
+            implementation("org.icepdf.os:icepdf-core:6.2.2") {
+                exclude(group = "javax.media", module = "jai_core")
+            }
+
+            implementation("org.icepdf.os:icepdf-viewer:6.2.2") {
+                exclude(group = "javax.media", module = "jai_core")
+            }
         }
     }
 

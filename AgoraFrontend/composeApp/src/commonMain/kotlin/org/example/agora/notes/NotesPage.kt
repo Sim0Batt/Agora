@@ -1,4 +1,4 @@
-package org.example.agora.editor
+package org.example.agora.notes
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,10 +19,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import org.example.agora.home.NoteCard
+import org.example.agora.drawable.NoteCard
 import org.example.agora.server.ServerRequests
 import org.example.agora.server.models.NotesJson
-import org.example.agora.settings.FileSaver
+import org.example.agora.utils.FileSaver
 
 @Composable
 fun NotesPage (

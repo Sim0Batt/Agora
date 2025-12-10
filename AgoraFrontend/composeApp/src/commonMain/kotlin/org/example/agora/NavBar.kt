@@ -30,6 +30,10 @@ private val navItems = listOf(
         title = "Notes",
     ),
     NavItem(
+        route = "latex",
+        title = "LaTeX Editor",
+    ),
+    NavItem(
         route = "converter",
         title = "Converter",
     ),

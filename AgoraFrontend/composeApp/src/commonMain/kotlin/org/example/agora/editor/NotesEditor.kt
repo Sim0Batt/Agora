@@ -7,18 +7,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.runBlocking
 import org.example.agora.LatexConverter
 import org.example.agora.LocalNavigator
-import org.example.agora.Navigator
+import org.example.agora.drawable.LatexPreviewDialog
 import org.example.agora.server.ServerRequests
-import org.example.agora.server.models.CreateNoteJson
 import org.example.agora.server.models.NotesJson
-import org.example.agora.settings.FileSaver
-import org.example.agora.settings.SettingsRepository
+import org.example.agora.utils.FileSaver
+import org.example.agora.utils.SettingsRepository
 
 @Composable
 fun NotesEditor(
@@ -102,24 +100,6 @@ fun NotesEditor(
                 Text("Esporta Latex", color = colorPalette.secondary, fontSize = 16.sp)
             }
         }
-
-//        OutlinedTextField(
-//            value = title,
-//            onValueChange = { title = it },
-//            label = { Text("Titolo") },
-//            placeholder = { Text("Inserisci il titolo...") },
-//            singleLine = true,
-//            modifier = Modifier.fillMaxWidth(),
-//            textStyle = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-//            colors = OutlinedTextFieldDefaults.colors(
-//                focusedBorderColor = Color.White,
-//                unfocusedBorderColor = Color.White,
-//                focusedLabelColor = Color.White,
-//                cursorColor = Color.White,
-//                focusedContainerColor = colorPalette.secondary,
-//                unfocusedContainerColor = colorPalette.secondary
-//            )
-//        )
 
         OutlinedTextField(
             value = content,

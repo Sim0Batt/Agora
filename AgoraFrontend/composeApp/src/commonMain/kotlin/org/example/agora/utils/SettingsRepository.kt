@@ -1,6 +1,5 @@
-package org.example.agora.settings
+package org.example.agora.utils
 import com.russhwolf.settings.Settings
-import kotlin.time.Clock
 
 class SettingsRepository {
     private val settings: Settings = Settings()
@@ -8,6 +7,7 @@ class SettingsRepository {
     private companion object {
         const val SAVE_PATH_KEY = ""
         const val AGORA_USER_ID = ""
+        const val SAVE_PDF_PATH = ""
     }
 
     fun setSavePath(path: String) {
@@ -24,5 +24,13 @@ class SettingsRepository {
 
     fun getSavedUserId(): String{
         return settings.getString(AGORA_USER_ID, "1")
+    }
+
+    fun savePdfPath(pdfPath: String): String{
+        return settings.getString(SAVE_PDF_PATH, pdfPath)
+    }
+
+    fun getPdfPath(defaultPath: String): String{
+        return settings.getString(SAVE_PDF_PATH, defaultPath)
     }
 }

@@ -24,7 +24,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import org.example.agora.LocalNavigator
-import org.example.agora.settings.FileSaver
+import org.example.agora.drawable.ActionCard
+import org.example.agora.drawable.NoteCard
+import org.example.agora.utils.FileSaver
 
 @Composable
 fun HomePage(
@@ -58,13 +60,13 @@ fun HomePage(
             horizontalArrangement = Arrangement.spacedBy(25.dp),
         ){
              ActionCard(
-                title = "Open Notes",
-                text = "Click here to open the notes editor",
-                onClick = {
-                    navigator.navigate("notes")
-                },
-                colorPalette = colorPalette
-            )
+                 title = "Open Notes",
+                 text = "Click here to open the notes editor",
+                 onClick = {
+                     navigator.navigate("notes")
+                 },
+                 colorPalette = colorPalette
+             )
 
             ActionCard(
                 title = "Create a New Note",

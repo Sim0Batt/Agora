@@ -15,7 +15,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.example.agora.server.models.CreateNoteJson
 import org.example.agora.server.models.NotesJson
-import org.example.agora.settings.FileSaver
+import org.example.agora.utils.FileSaver
 
 object ServerRequests {
     val client = HttpClient(CIO) {

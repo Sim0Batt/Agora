@@ -1,4 +1,4 @@
-package org.example.agora.settings
+package org.example.agora.utils
 
 interface FileSaver {
     fun saveNoteToDisk(content: String, path: String)
