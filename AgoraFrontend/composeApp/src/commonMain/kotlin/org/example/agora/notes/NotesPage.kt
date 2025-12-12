@@ -5,7 +5,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
@@ -23,18 +27,20 @@ import org.example.agora.drawable.NoteCard
 import org.example.agora.server.ServerRequests
 import org.example.agora.server.models.NotesJson
 import org.example.agora.utils.FileSaver
+import org.example.agora.utils.SettingsRepository
 
 @Composable
 fun NotesPage (
     modifier: Modifier = Modifier,
     colorPalette: ColorScheme,
-    fileSaver: FileSaver
+    fileSaver: FileSaver,
+    settingsRepository: SettingsRepository
 ){
     var notesList by remember { mutableStateOf<List<NotesJson>>(emptyList()) }
 
     LaunchedEffect(Unit) {
         try {
-            notesList = ServerRequests.getNotes("1", fileSaver)
+            notesList = ServerRequests(settingsRepository).getNotes("1", fileSaver)
         } catch (e: Exception) {
             println("Errore nel caricamento delle note: ${e.message}")
         }
@@ -49,16 +55,18 @@ fun NotesPage (
             fontSize = MaterialTheme.typography.displaySmall.fontSize,
         )
         if (notesList.isNotEmpty()) {
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(25.dp),
-                contentPadding = PaddingValues(bottom = 20.dp)
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(4),
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+
+                contentPadding = PaddingValues(16.dp)
             ) {
                 items(notesList) { note ->
                     NoteCard(
                         modifier = Modifier,
                         title = note.title,
-                        savedPath = note.savedPath,
                         colorPalette = colorPalette,
                         length = note.length,
                         noteId = note.id,

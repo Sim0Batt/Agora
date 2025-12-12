@@ -30,6 +30,7 @@ fun SettingsPage (
 ){
     Box(modifier = modifier){
         val pathString = remember { mutableStateOf("") }
+        val pdfPathString = remember { mutableStateOf("") }
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -90,10 +91,10 @@ fun SettingsPage (
                     focusedContainerColor = colorPalette.primary,
                     unfocusedContainerColor = colorPalette.primary,
                 ),
-                value = pathString.value,
+                value = pdfPathString.value,
                 onValueChange = {newPath: String ->
                     run {
-                        pathString.value = newPath
+                        pdfPathString.value = newPath
                     }
                 },
                 label = { Text(settingsRepository.getSavePathFlow("/home/USER/documents/pdf/")) },
@@ -103,8 +104,8 @@ fun SettingsPage (
                 Modifier.padding(0.dp, 40.dp, 0.dp, 40.dp).fillMaxWidth(),
                 "Save PDF Path",
                 {
-                    settingsRepository.savePdfPath(pathString.value)
-                    println("Saved path: ${pathString.value}")
+                    settingsRepository.savePdfPath(pdfPathString.value)
+                    println("Saved path: ${pdfPathString.value}")
                 },
                 colorPalette
             )

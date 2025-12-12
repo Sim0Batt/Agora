@@ -1,6 +1,7 @@
 package org.example.agora.utils
 
 import java.io.File
+import java.io.IOException
 import kotlin.io.path.Path
 import kotlin.io.path.createFile
 
@@ -23,10 +24,20 @@ object DesktopFileSaver: FileSaver {
     }
 
     override fun saveNoteToDisk(content: String, path: String) {
-        if(!File(path).exists()) {
-            Path(path).createFile()
+        val target = File(path)
+
+        val parent = target.parentFile
+        if (parent != null && !parent.exists()) {
+            if (!parent.mkdirs()) {
+                throw IOException("Cannot create directory: ${parent.absolutePath}")
+            }
         }
-        File(path).writeText(content)
+
+        if (target.exists() && target.isDirectory) {
+            throw IOException("Target path is a directory, expected file: ${target.absolutePath}")
+        }
+
+        target.writeText(content)
     }
 
 

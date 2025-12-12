@@ -7,9 +7,11 @@ import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.update
 import server.models.AccountJson
 import server.models.CreateNoteJson
 import server.models.NotesJson
+import server.models.SaveNoteJson
 import server.models.UserJson
 
 object QueryManager {
@@ -69,7 +71,6 @@ object QueryManager {
                         note[NotesTable.title],
                         note[NotesTable.type],
                         note[NotesTable.length],
-                        note[NotesTable.path],
                         note[NotesTable.userId]
                     )
                 )
@@ -90,8 +91,11 @@ object QueryManager {
                         note[NotesTable.title],
                         note[NotesTable.type],
                         note[NotesTable.length],
-                        note[NotesTable.path],
-                        note[NotesTable.userId]
+                        note[NotesTable.userId],
+                        note[NotesTable.content]
+                            .replace("\n", "\\n")
+                            .replace("\"",  "'")
+                            .replace("\\", "\\\\")
                     )
                 )
             }
@@ -112,8 +116,28 @@ object QueryManager {
                 it[NotesTable.type] = notesJson.type
                 it[NotesTable.length] = notesJson.length
                 it[NotesTable.userId] = notesJson.userId
-                it[NotesTable.path] = notesJson.path
+                it[NotesTable.content] = ""
             }
         }
+    }
+
+    fun updateNote(notesJson: SaveNoteJson){
+        transaction (connection){
+            NotesTable.update({ NotesTable.id eq notesJson.noteId}){
+                it[NotesTable.content] = notesJson.content
+                it[NotesTable.length] = notesJson.length
+            }
+        }
+    }
+
+    fun getContent(noteId: Int): String{
+        var content = ""
+        transaction (connection){
+            content = NotesTable.selectAll().where{ NotesTable.id eq noteId }.firstOrNull()!![NotesTable.content]
+                .replace("\n", "\\n")
+                .replace("\"",  "'")
+                .replace("\\", "\\\\")
+        }
+        return content
     }
 }

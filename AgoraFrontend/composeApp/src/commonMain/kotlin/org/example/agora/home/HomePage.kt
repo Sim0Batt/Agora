@@ -27,18 +27,20 @@ import org.example.agora.LocalNavigator
 import org.example.agora.drawable.ActionCard
 import org.example.agora.drawable.NoteCard
 import org.example.agora.utils.FileSaver
+import org.example.agora.utils.SettingsRepository
 
 @Composable
 fun HomePage(
     colorPalette: ColorScheme,
     modifier: Modifier = Modifier,
-    fileSaver: FileSaver
+    fileSaver: FileSaver,
+    settingsRepository: SettingsRepository
 ){
     var notesList by remember { mutableStateOf<List<NotesJson>>(emptyList()) }
 
     LaunchedEffect(Unit) {
         try {
-            notesList = ServerRequests.getNotes("1", fileSaver).reversed().take(3)
+            notesList = ServerRequests(settingsRepository).getNotes("1", fileSaver).reversed().take(3)
         } catch (e: Exception) {
             println("Errore nel caricamento delle note: ${e.message}")
         }
@@ -104,7 +106,6 @@ fun HomePage(
                     NoteCard(
                         modifier = Modifier,
                         title = note.title,
-                        savedPath = note.savedPath,
                         colorPalette = colorPalette,
                         length = note.length,
                         noteId = note.id,

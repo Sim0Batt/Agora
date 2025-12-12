@@ -10,11 +10,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.runBlocking
-import org.example.agora.LatexConverter
+import org.example.agora.utils.LatexConverter
 import org.example.agora.LocalNavigator
 import org.example.agora.drawable.LatexPreviewDialog
 import org.example.agora.server.ServerRequests
 import org.example.agora.server.models.NotesJson
+import org.example.agora.server.models.SaveNoteJson
 import org.example.agora.utils.FileSaver
 import org.example.agora.utils.SettingsRepository
 
@@ -33,15 +34,15 @@ fun NotesEditor(
     var showLatexDialog by remember { mutableStateOf(false) }
 
     var notesList by remember { mutableStateOf<List<NotesJson>>(emptyList()) }
-    var selectedNote by remember { mutableStateOf(NotesJson(-1, "", "", 0, "", -1)) }
+    var selectedNote by remember { mutableStateOf(NotesJson(-1, "", "", 0, -1)) }
 
     LaunchedEffect(Unit) {
         try {
-            notesList = ServerRequests.getNotes("1", fileSaver).reversed().take(3)
+            notesList = ServerRequests(settingsRepository).getNotes("1", fileSaver).reversed().take(3)
             notesList.map {
                 if (it.id == noteId) selectedNote = it
             }
-            content = fileSaver.getFileText(selectedNote.savedPath)
+            content = ServerRequests(settingsRepository).getContent(noteId).replace("\\n", "\n")
         } catch (e: Exception) {
             println("Errore nel caricamento delle note: ${e.message}")
         }
@@ -70,7 +71,10 @@ fun NotesEditor(
                 colors = ButtonDefaults.buttonColors(containerColor = colorPalette.primary),
                 onClick = {
                     runBlocking {
-                        fileSaver.saveNoteToDisk(content, selectedNote.savedPath)
+                        fileSaver.saveNoteToDisk(content, settingsRepository.getSavePathFlow("") + selectedNote.title + ".txt")
+                        ServerRequests(settingsRepository).updateNote(
+                            SaveNoteJson(selectedNote.id, content.length, content)
+                        )
                     }
                 }
             ) {
@@ -80,9 +84,8 @@ fun NotesEditor(
             Button(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                 onClick = {
-                    runBlocking {
-                        ServerRequests.deleteNote(selectedNote.id)
-                        fileSaver.deleteFile(selectedNote.savedPath)
+                    runBlocking{
+                        ServerRequests(settingsRepository).deleteNote(selectedNote.id)
                         navigator.navigate("home")
                     }
                 }

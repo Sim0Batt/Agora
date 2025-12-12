@@ -8,7 +8,6 @@ class CreateNoteJson(
     val type: String,
     val length: Int,
     val userId: Int,
-    val path: String = ""
 ) {
     override fun toString(): String {
         return """
@@ -16,8 +15,7 @@ class CreateNoteJson(
     "title":"$title",
     "length":"$length",
     "type":"$type",
-    "path":"$path",
-    "userId":"$userId"
+    "userId":"$userId",
 }
         """.trimIndent()
     }

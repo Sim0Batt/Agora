@@ -98,17 +98,15 @@ fun NewNotePage(
                 "CREATE NOTE",
                 {
                     runBlocking {
-                        ServerRequests.createNote(
+                        ServerRequests(settingsRepository).createNote(
                             CreateNoteJson(
                                 titleString.value,
                                 typeString.value,
                                 0,
                                 1,
-                                settingsRepository.getSavePathFlow("/home/USER/documents/") + titleString.value.trim() + ".txt"
                             )
                         )
                     }
-                    fileSaver.saveNoteToDisk("", settingsRepository.getSavePathFlow("/home/USER/documents/") + titleString.value.trim() + ".txt")
                     navigator.navigate("notes")
                 },
                 colorPalette

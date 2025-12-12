@@ -78,13 +78,15 @@ fun App(
                         "home" -> HomePage(
                             DarkColorPalette,
                             modifier = Modifier.fillMaxHeight(),
-                            fileSaver
+                            fileSaver,
+                            settingsRepository
                         )
 
                         "notes" -> NotesPage(
                             modifier,
                             DarkColorPalette,
                             fileSaver,
+                            settingsRepository
                         )
 
                         "settings" -> SettingsPage(
@@ -112,7 +114,8 @@ fun App(
                             DarkColorPalette,
                             modifier,
                             settingsRepository,
-                            fileSaver
+                            fileSaver,
+                            latexCodeConverter = latex
                         )
 
                         "converter" -> ConverterPage(

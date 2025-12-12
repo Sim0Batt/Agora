@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.example.agora.LatexConverter
+import org.example.agora.utils.LatexConverter
 
 @Composable
 fun ConverterPage(

@@ -22,7 +22,6 @@ fun NoteCard(
     modifier: Modifier = Modifier,
     title: String,
     length: Int,
-    savedPath: String,
     colorPalette: ColorScheme,
     noteId: Int,
     type: String
@@ -33,9 +32,9 @@ fun NoteCard(
             defaultElevation = 6.dp
         ),
         colors = CardColors(
-            if(type == "University") Color(43, 74, 117) else colorPalette.secondary,
+            getCardColor(type, colorPalette),
             colorPalette.primary,
-            if(type == "University") Color(43, 74, 117) else colorPalette.secondary.copy(alpha = 0.3f),
+            getCardColor(type, colorPalette).copy(alpha = 0.3f),
             colorPalette.primary
         ),
         modifier = Modifier.size(width = 350.dp, height = 200.dp),
@@ -59,13 +58,13 @@ fun NoteCard(
             modifier = Modifier.align(Alignment.CenterHorizontally),
             textAlign = TextAlign.Center,
         )
+    }
+}
 
-        Text(
-            text = savedPath,
-            color = colorPalette.onSurface,
-            fontSize = 10.sp,
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            textAlign = TextAlign.Center,
-        )
+private fun getCardColor(type: String, colorPalette: ColorScheme): Color {
+    return when (type) {
+        "University" -> Color(43, 74, 117)
+        "Work" -> Color(255, 165, 0)
+        else -> colorPalette.secondary
     }
 }

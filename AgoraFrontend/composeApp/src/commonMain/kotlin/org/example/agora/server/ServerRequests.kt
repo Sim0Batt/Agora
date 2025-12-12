@@ -13,11 +13,14 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.example.agora.server.models.ContentJson
 import org.example.agora.server.models.CreateNoteJson
 import org.example.agora.server.models.NotesJson
+import org.example.agora.server.models.SaveNoteJson
 import org.example.agora.utils.FileSaver
+import org.example.agora.utils.SettingsRepository
 
-object ServerRequests {
+class ServerRequests (settingsRepository: SettingsRepository){
     val client = HttpClient(CIO) {
         install(ContentNegotiation) {
             json(Json {
@@ -32,8 +35,8 @@ object ServerRequests {
             socketTimeoutMillis = 5000
         }
     }
-
-    const val URL = "13.60.112.248:8080"
+// 13.60.112.248
+    val URL = "13.60.112.248:8080"
     suspend fun getNotes(userId: String, fileSaver: FileSaver): List<NotesJson>{
         val url = "http://$URL/note/$userId"
 
@@ -50,7 +53,7 @@ object ServerRequests {
                     Json.decodeFromString<NotesJson>(jsonString)
                 }
 
-            return notes.filter { fileSaver.fileExists(it.savedPath) }
+            return notes
         } catch (e: Exception) {
             println("Errore nel parsing del NotesJson: ${e.message}")
             return emptyList()
@@ -83,4 +86,31 @@ object ServerRequests {
             return "failure"
         }
     }
+
+    suspend fun updateNote(saveNoteJson: SaveNoteJson): String{
+        val url = "http://$URL/updateNote"
+        try{
+            client.post(url){
+                contentType(ContentType.Application.Json)
+                setBody(saveNoteJson)
+            }
+            return "success"
+        }catch (e: Exception){
+            println("Errore nella rimozione della Nota: ${e.message}")
+            return "failure"
+        }
+    }
+
+
+    suspend fun getContent(noteId: Int): String{
+        val url = "http://$URL/content/$noteId"
+        try{
+            val response = Json.decodeFromString<ContentJson>(client.post(url).bodyAsText())
+            return response.content
+        }catch (e: Exception){
+            println("Errore nella rimozione della Nota: ${e.message}")
+            return "failure"
+        }
+    }
+
 }

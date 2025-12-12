@@ -13,7 +13,9 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import server.models.AccountJson
+import server.models.ContentJson
 import server.models.CreateNoteJson
+import server.models.SaveNoteJson
 import server.models.UserJson
 
 
@@ -60,7 +62,6 @@ fun Application.module() {
         get("/note/{id}") {
             val userId = call.parameters["id"].toString().toInt()
             val result = QueryManager.getUserNotes(userId).joinToString(";\n")
-            println(result)
             call.respondText(result)
         }
 
@@ -74,6 +75,22 @@ fun Application.module() {
             val notesJson = call.receive<CreateNoteJson>()
             QueryManager.createNote(notesJson)
             call.respondText("Note created")
+        }
+
+        post("/updateNote"){
+            val notesJson = call.receive<SaveNoteJson>()
+            QueryManager.updateNote(notesJson)
+            call.respondText("Note updated")
+        }
+
+        post("/content/{id}"){
+            val noteId = call.parameters["id"]?.toIntOrNull() ?: -1
+            println(QueryManager.getContent(noteId))
+            call.respondText(
+                ContentJson(
+                    QueryManager.getContent(noteId),
+                ).toString()
+            )
         }
 
     }

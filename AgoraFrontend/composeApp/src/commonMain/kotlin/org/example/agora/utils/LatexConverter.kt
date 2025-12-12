@@ -1,4 +1,4 @@
-package org.example.agora
+package org.example.agora.utils
 
 object LatexConverter {
     fun convert(text: String): String {
