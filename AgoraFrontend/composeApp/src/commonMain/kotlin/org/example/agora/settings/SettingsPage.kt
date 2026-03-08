@@ -31,6 +31,7 @@ fun SettingsPage (
     Box(modifier = modifier){
         val pathString = remember { mutableStateOf("") }
         val pdfPathString = remember { mutableStateOf("") }
+        val tmpPathString = remember { mutableStateOf("") }
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -106,6 +107,38 @@ fun SettingsPage (
                 {
                     settingsRepository.savePdfPath(pdfPathString.value)
                     println("Saved path: ${pdfPathString.value}")
+                },
+                colorPalette
+            )
+
+            // TMP txt save path
+            Text(
+                modifier = Modifier.padding(20.dp).fillMaxWidth(),
+                text = "TMP .tex Directory Path",
+                color = colorPalette.primary,
+                textAlign = TextAlign.Start,
+                fontSize = MaterialTheme.typography.displaySmall.fontSize,
+            )
+            OutlinedTextField(
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = colorPalette.primary,
+                    unfocusedContainerColor = colorPalette.primary,
+                ),
+                value = tmpPathString.value,
+                onValueChange = {newPath: String ->
+                    run {
+                        tmpPathString.value = newPath
+                    }
+                },
+                label = { Text(settingsRepository.getSavePathFlow("/home/USER/documents/tmp/")) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            ButtonCard(
+                Modifier.padding(0.dp, 40.dp, 0.dp, 40.dp).fillMaxWidth(),
+                "Save TMP Path",
+                {
+                    settingsRepository.saveTmpPath(tmpPathString.value)
+                    println("Saved path: ${tmpPathString.value}")
                 },
                 colorPalette
             )

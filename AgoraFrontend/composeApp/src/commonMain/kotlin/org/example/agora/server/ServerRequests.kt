@@ -30,13 +30,15 @@ class ServerRequests (settingsRepository: SettingsRepository){
             })
         }
         install(HttpTimeout) {
-            requestTimeoutMillis = 5000
-            connectTimeoutMillis = 5000
-            socketTimeoutMillis = 5000
+            requestTimeoutMillis = 10000
+            connectTimeoutMillis = 10000
+            socketTimeoutMillis = 10000
         }
     }
-// 13.60.112.248
+
     val URL = "13.60.112.248:8080"
+
+
     suspend fun getNotes(userId: String, fileSaver: FileSaver): List<NotesJson>{
         val url = "http://$URL/note/$userId"
 

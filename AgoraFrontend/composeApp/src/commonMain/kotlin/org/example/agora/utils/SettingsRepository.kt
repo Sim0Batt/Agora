@@ -8,6 +8,7 @@ class SettingsRepository {
         const val SAVE_PATH_KEY = ""
         const val AGORA_USER_ID = ""
         const val SAVE_PDF_PATH = ""
+        const val SAVE_TMP_PATH = ""
     }
 
     fun setSavePath(path: String) {
@@ -32,5 +33,13 @@ class SettingsRepository {
 
     fun getPdfPath(defaultPath: String): String{
         return settings.getString(SAVE_PDF_PATH, defaultPath)
+    }
+
+    fun saveTmpPath(pdfPath: String): String{
+        return settings.getString(SAVE_TMP_PATH, pdfPath)
+    }
+
+    fun getTmpPath(defaultPath: String): String{
+        return settings.getString(SAVE_TMP_PATH, defaultPath)
     }
 }

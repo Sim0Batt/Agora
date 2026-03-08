@@ -1,11 +1,8 @@
 package org.example.agora.editor
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.FormatListBulleted
@@ -21,10 +18,12 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import org.example.agora.settings.UtilsFunctions
 import org.example.agora.utils.FileSaver
 import org.example.agora.utils.LatexCodeConverter
 import org.example.agora.utils.SettingsRepository
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LatexEditorPage(
     colorPalette: ColorScheme,
@@ -34,22 +33,18 @@ fun LatexEditorPage(
     documentTitle: String = "Documento",
     latexCodeConverter: LatexCodeConverter
 ) {
-    // 1. Usiamo TextFieldValue invece di String per controllare il cursore e la selezione!
     var content by remember { mutableStateOf(TextFieldValue("")) }
-
-    // 2. CoroutineScope per non bloccare l'interfaccia durante la generazione
     val scope = rememberCoroutineScope()
     var isCompiling by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
+    var itemsMenu by remember { mutableStateOf(listOf<String>("asdasa", "sadasdas", "asdasdas")) }
 
-    // --- FUNZIONE HELPER PER LA TOOLBAR ---
-    // Avvolge il testo selezionato con i comandi LaTeX (es. \textbf{...})
     fun insertLatexCommand(prefix: String, suffix: String = "}") {
         val currentText = content.text
         val selection = content.selection
         val selectedText = currentText.substring(selection.start, selection.end)
 
         val newText = currentText.replaceRange(selection.start, selection.end, "$prefix$selectedText$suffix")
-        // Riposiziona il cursore esattamente in mezzo alle graffe se non c'era testo selezionato
         val newCursorPos = selection.start + prefix.length + selectedText.length
 
         content = TextFieldValue(text = newText, selection = TextRange(newCursorPos))
@@ -59,7 +54,6 @@ fun LatexEditorPage(
         modifier = modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // --- HEADER: Titolo e Bottoni di Azione ---
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -71,25 +65,37 @@ fun LatexEditorPage(
                 color = colorPalette.primary
             )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    colors = ButtonDefaults.buttonColors(containerColor = colorPalette.primary),
-                    enabled = !isCompiling,
-                    onClick = {
-                        scope.launch {
-                            isCompiling = true
-                            // Passiamo solo la stringa (content.text) al convertitore
-                            latexCodeConverter.codeConverter(documentTitle, content.text)
-                            isCompiling = false
-                        }
+            Button(
+                colors = ButtonDefaults.buttonColors(containerColor = colorPalette.secondary),
+                enabled = !isCompiling,
+                onClick = {
+                    scope.launch {
+                        isCompiling = true
+                        latexCodeConverter.codeConverter(documentTitle, content.text)
+                        isCompiling = false
                     }
-                ) {
-                    Text(if (isCompiling) "Generazione..." else "Genera PDF")
+                }
+            ) {
+                Text(if (isCompiling) "Generating..." else "Generate PDF")
+            }
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = false }
+            ) {
+                // Genera un elemento cliccabile per ogni opzione nella lista
+                itemsMenu.forEach { selectionOption ->
+                    DropdownMenuItem(
+                        text = { Text(selectionOption) },
+                        onClick = {
+                            UtilsFunctions.onOptionSelected("") // Passa la scelta al genitore
+                            expanded = false                  // Chiudi la tendina
+                        }
+                    )
                 }
             }
         }
 
-        // --- TOOLBAR (Comandi Rapidi) ---
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = colorPalette.surfaceVariant.copy(alpha = 0.5f),
@@ -102,28 +108,23 @@ fun LatexEditorPage(
             ) {
                 Text("Insert:", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(end = 8.dp))
 
-                // Grassetto
                 IconButton(onClick = { insertLatexCommand("\\textbf{") }) {
-                    Icon(Icons.Default.FormatBold, contentDescription = "Bold")
+                    Icon(Icons.Default.FormatBold, contentDescription = "Grassetto")
                 }
-                // Corsivo
                 IconButton(onClick = { insertLatexCommand("\\textit{") }) {
-                    Icon(Icons.Default.FormatItalic, contentDescription = "Italic")
+                    Icon(Icons.Default.FormatItalic, contentDescription = "Corsivo")
                 }
-                // Elenco puntato
                 IconButton(onClick = {
                     insertLatexCommand("\\begin{itemize}\n\\item ", "\n\\end{itemize}")
                 }) {
-                    Icon(Icons.Default.FormatListBulleted, contentDescription = "List")
+                    Icon(Icons.Default.FormatListBulleted, contentDescription = "Elenco Puntato")
                 }
-                // Sezione
                 Button(
                     onClick = { insertLatexCommand("\\section{") },
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                 ) {
                     Text("\\section")
                 }
-                // Equazione
                 Button(
                     onClick = { insertLatexCommand("\\begin{equation}\n", "\n\\end{equation}") },
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
@@ -133,53 +134,27 @@ fun LatexEditorPage(
             }
         }
 
-        // --- SPLIT SCREEN (Editor + Preview) ---
-        Row(
-            modifier = Modifier.fillMaxSize().weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // LATO SINISTRO: Editor di testo
-            OutlinedTextField(
-                value = content,
-                onValueChange = { content = it },
-                placeholder = { Text("Scrivi qui i tuoi appunti in LaTeX...") },
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(1f),
-                // Usiamo un font Monospace (da programmatore) per leggere meglio il codice
-                textStyle = TextStyle(
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp,
-                    color = colorPalette.onSurface
-                ),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = colorPalette.primary,
-                    unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
-                    focusedContainerColor = colorPalette.surface,
-                    unfocusedContainerColor = colorPalette.surface
-                )
+        OutlinedTextField(
+            value = content,
+            onValueChange = { content = it },
+            placeholder = { Text("Scrivi qui i tuoi appunti in LaTeX...") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            textStyle = TextStyle(
+                fontFamily = FontFamily.Monospace,
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                color = colorPalette.onSurface
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = colorPalette.primary,
+                unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f),
+                focusedContainerColor = colorPalette.surface,
+                unfocusedContainerColor = colorPalette.surface
             )
-
-            // LATO DESTRO: Anteprima PDF
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(1f)
-                    .border(1.dp, Color.Gray.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
-                    .background(Color.DarkGray.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
-            ) {
-                // TODO: Scommenta questo quando il fileSaver è pronto
-                /*
-                if(fileSaver.fileExists(settingsRepository.getPdfPath(""))){
-                    PdfViewer("${settingsRepository.getPdfPath("")}/$documentTitle.pdf", modifier)
-                } else {
-                    Text("Nessuna anteprima disponibile.\nPremi 'Genera PDF'.", textAlign = TextAlign.Center)
-                }
-                */
-                Text("Area Anteprima PDF", color = Color.Gray)
-            }
-        }
+        )
     }
+
+
 }
