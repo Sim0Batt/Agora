@@ -57,6 +57,8 @@ kotlin {
             // Serialization
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
             implementation("org.slf4j:slf4j-api:1.7.25")
+
+            implementation(compose.materialIconsExtended)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
