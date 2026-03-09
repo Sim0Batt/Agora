@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.FormatListBulleted
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,6 +28,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,20 +40,82 @@ import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.example.agora.utils.LATEX_COMMANDS
 import org.example.agora.utils.LatexSyntaxTransformation
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
+import org.example.agora.server.ServerRequests
+import org.example.agora.utils.SettingsRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LatexIDE(
     colorPalette: ColorScheme,
     modifier: Modifier = Modifier,
-
+    initialContent: String,
+    settingsRepository: SettingsRepository,
+    currentNoteId: Int,
 ) {
+
+
+    var content by remember(initialContent) { mutableStateOf(TextFieldValue(initialContent)) }
+    var suggestedCommands by remember { mutableStateOf<List<String>>(emptyList()) }
+    var currentWord by remember { mutableStateOf("") }
+    var isCompiling by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
+
+    fun insertLatexCommand(prefix: String, suffix: String = "}") {
+        val currentText = content.text
+        val selection = content.selection
+        val selectedText = currentText.substring(selection.start, selection.end)
+
+        val newText = currentText.replaceRange(selection.start, selection.end, "$prefix$selectedText$suffix")
+        val newCursorPos = selection.start + prefix.length + selectedText.length
+
+        content = TextFieldValue(text = newText, selection = TextRange(newCursorPos))
+    }
+
+    fun applySuggestion(suggestion: String) {
+        val text = content.text
+        val cursor = content.selection.start
+
+        val startIndex = cursor - (currentWord.length + 1) // Considero la lunghezza della parola più la \
+
+        var textToInsert = suggestion
+        var cursorOffset = suggestion.length
+
+        if (suggestion.startsWith("\\begin{")) {
+            val envName = suggestion.substringAfter("\\begin{").substringBefore("}")
+            val endStatement = "\\end{$envName}"
+
+            textToInsert = "$suggestion\n    \n$endStatement"
+
+            cursorOffset = suggestion.length + 5
+        }
+        else if (suggestion.endsWith("{}")) {
+            cursorOffset = suggestion.length - 1
+        }
+
+        val newText = text.replaceRange(startIndex, cursor, textToInsert)
+
+        val newCursorPos = startIndex + cursorOffset
+
+        content = TextFieldValue(text = newText, selection = TextRange(newCursorPos))
+        suggestedCommands = emptyList()
+    }
+
+
+
+
     Surface(
     modifier = Modifier.fillMaxWidth(),
     color = colorPalette.surfaceVariant.copy(alpha = 0.5f),
@@ -86,13 +151,27 @@ fun LatexIDE(
             ) {
                 Text("Math")
             }
+
+            Button(
+                colors = ButtonDefaults.buttonColors(containerColor = colorPalette.secondary),
+                enabled = !isCompiling,
+                onClick = {
+                    scope.launch {
+                        isCompiling = true
+                        ServerRequests(settingsRepository).updateLatexNote(currentNoteId, content.text)
+                        isCompiling = false
+                    }
+                }
+            ) {
+                Text("Save")
+            }
         }
     }
 
 
     // --- SPLIT SCREEN: EDITOR A SINISTRA, SUGGERIMENTI A DESTRA ---
     Row(
-    modifier = Modifier.fillMaxWidth().weight(1f),
+    modifier = Modifier.fillMaxWidth().width(1.dp),
     horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // --- 1. EDITOR PRINCIPALE (Si allarga per prendere lo spazio) ---
@@ -125,7 +204,8 @@ fun LatexIDE(
                 .onPreviewKeyEvent { event ->
                     if (event.type == KeyEventType.KeyDown) {
 
-                        val isConfirmKey = event.key == Key.Tab || event.key == Key.Enter || event.key == Key.NumPadEnter
+                        val isConfirmKey =
+                            event.key == Key.Tab || event.key == Key.Enter || event.key == Key.NumPadEnter
                         if (isConfirmKey && suggestedCommands.isNotEmpty()) {
                             applySuggestion(suggestedCommands.first())
                             return@onPreviewKeyEvent true
@@ -143,10 +223,12 @@ fun LatexIDE(
                                     insertLatexCommand("\\textbf{")
                                     return@onPreviewKeyEvent true
                                 }
+
                                 Key.I -> {
                                     insertLatexCommand("\\textit{")
                                     return@onPreviewKeyEvent true
                                 }
+
                                 else -> return@onPreviewKeyEvent false
                             }
                         }
@@ -175,7 +257,7 @@ fun LatexIDE(
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
 
-                    LazyColumn (
+                    LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         items(suggestedCommands) { suggestion ->
@@ -198,4 +280,5 @@ fun LatexIDE(
                 }
             }
         }
+    }
 }

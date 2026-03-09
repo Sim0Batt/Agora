@@ -1,19 +1,15 @@
 package org.example.agora.notesCopy
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import org.example.agora.editor.LatexEditorPage
+import kotlinx.coroutines.runBlocking
+import org.example.agora.editor.LatexIDE
 import org.example.agora.server.ServerRequests
 import org.example.agora.utils.FileSaver
 import org.example.agora.utils.LatexCodeConverter
@@ -25,22 +21,46 @@ fun CopyNotesPage(
     colorPalette: ColorScheme,
     modifier: Modifier = Modifier,
     settingsRepository: SettingsRepository,
-    latexCodeConverter: LatexCodeConverter,
     fileSaver: FileSaver
 ) {
     var latexFiles by remember { mutableStateOf(listOf<String>()) }
     var selectedLatexFile by remember { mutableStateOf("") }
     var latexMenuExpanded by remember { mutableStateOf(false) }
 
-    val normalNotes = listOf("Lezione 1", "Lezione 2", "Appunti Sparsi")
-    var selectedNormalNote by remember { mutableStateOf(normalNotes[0]) }
+    var normalNotes by remember { mutableStateOf(listOf<String>()) }
+    var selectedNormalNote by remember { mutableStateOf("") }
     var normalMenuExpanded by remember { mutableStateOf(false) }
 
-    var normalNoteContent by remember { mutableStateOf("") }
+    var selectedNoteContent by remember { mutableStateOf("") }
+    var selectedLatexNoteContent by remember { mutableStateOf("") }
+
+    var currentLatexNoteId by remember { mutableStateOf(-1) }
+    var currentNormalNoteId by remember { mutableStateOf(-1) }
+
 
 
     LaunchedEffect(settingsRepository) {
         latexFiles = ServerRequests(settingsRepository).getLatexNotesList(1).map { "${it.id} - ${it.title}" }
+
+        normalNotes = ServerRequests(settingsRepository).getNotes("1", fileSaver).map { "${it.id} - ${it.title}" }
+
+        println(latexFiles)
+        println(normalNotes)
+
+        currentLatexNoteId = if(settingsRepository.getLastLatexId() != -1){
+            settingsRepository.getLastLatexId()
+        }else if(latexFiles.isNotEmpty()){
+            latexFiles.first().split(" - ")[0].toInt()
+        }else{
+            -1
+        }
+
+        currentNormalNoteId = if(normalNotes.isNotEmpty()){
+            normalNotes.first().split(" - ")[0].toInt()
+        }else{
+            -1
+        }
+
     }
 
 
@@ -49,7 +69,7 @@ fun CopyNotesPage(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Trascrizione in LaTeX",
+            text = "Copy Notes in LaTeX",
             style = MaterialTheme.typography.headlineMedium,
             color = colorPalette.primary
         )
@@ -93,22 +113,17 @@ fun CopyNotesPage(
                                 onClick = {
                                     selectedLatexFile = file
                                     latexMenuExpanded = false
+                                    selectedLatexNoteContent = runBlocking{
+                                        ServerRequests(settingsRepository).getLatexContent(file.split(" - ")[0].toInt())
+                                    }
+
                                 }
                             )
                         }
                     }
                 }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .border(1.dp, colorPalette.primary, RoundedCornerShape(8.dp))
-                        .background(colorPalette.surfaceVariant.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    LatexEditorPage(colorPalette, modifier, settingsRepository, fileSaver, latexCodeConverter)
-                }
+                LatexIDE(colorPalette, modifier, selectedLatexNoteContent, settingsRepository, currentLatexNoteId)
             }
 
 
@@ -144,19 +159,17 @@ fun CopyNotesPage(
                                 onClick = {
                                     selectedNormalNote = note
                                     normalMenuExpanded = false
-                                    // TODO: Qui dovrai caricare il contenuto della nota selezionata
-                                    // normalNoteContent = fetchNoteContent(note.id)
+                                    selectedNoteContent = runBlocking { ServerRequests(settingsRepository).getNotesContent(currentNormalNoteId) }
                                 }
                             )
                         }
                     }
                 }
 
-                // VISUALIZZATORE APPUNTI (Read Only)
                 OutlinedTextField(
-                    value = normalNoteContent,
-                    onValueChange = {}, // Ignora qualsiasi input
-                    readOnly = true,    // Impedisce la modifica e l'apertura della tastiera su mobile
+                    value = selectedNoteContent,
+                    onValueChange = {},
+                    readOnly = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),

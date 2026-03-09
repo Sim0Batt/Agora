@@ -134,7 +134,6 @@ fun App(
                             DarkColorPalette,
                             modifier,
                             settingsRepository,
-                            latex,
                             fileSaver
                         )
                     }
