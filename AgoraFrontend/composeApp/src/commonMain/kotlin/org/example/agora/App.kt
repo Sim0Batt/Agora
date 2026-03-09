@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import notesCopy.CopyNotesPage
 import org.example.agora.converter.ConverterPage
 import org.example.agora.editor.LatexEditorPage
 import org.example.agora.notes.NotesPage
@@ -126,6 +127,14 @@ fun App(
                             modifier,
                             DarkColorPalette,
                             settingsRepository,
+                            fileSaver
+                        )
+
+                        "notescopy" -> CopyNotesPage(
+                            DarkColorPalette,
+                            modifier,
+                            settingsRepository,
+                            latex,
                             fileSaver
                         )
                     }

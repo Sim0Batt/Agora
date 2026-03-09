@@ -40,7 +40,11 @@ private val navItems = listOf(
     NavItem(
         route = "settings",
         title = "Settings",
-    )
+    ),
+    NavItem(
+        route = "notescopy",
+        title = "Copy Notes",
+    ),
 )
 
 @Composable

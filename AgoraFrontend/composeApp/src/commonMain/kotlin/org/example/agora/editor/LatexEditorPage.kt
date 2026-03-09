@@ -33,7 +33,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.example.agora.LocalNavigator
 import org.example.agora.server.ServerRequests
-import org.example.agora.settings.UtilsFunctions
 import org.example.agora.utils.FileSaver
 import org.example.agora.utils.LATEX_COMMANDS
 import org.example.agora.utils.LatexCodeConverter

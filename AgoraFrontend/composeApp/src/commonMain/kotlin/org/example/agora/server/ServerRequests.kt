@@ -38,7 +38,7 @@ class ServerRequests (settingsRepository: SettingsRepository){
         }
     }
 
-    val URL = "13.60.112.248:8080" // 13.60.112.248
+    val URL = "0.0.0.0:8080" // 13.60.112.248
 
 
     suspend fun getNotes(userId: String, fileSaver: FileSaver): List<NotesJson>{
