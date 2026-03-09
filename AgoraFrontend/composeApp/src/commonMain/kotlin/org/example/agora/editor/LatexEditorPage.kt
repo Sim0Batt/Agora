@@ -92,46 +92,6 @@ fun LatexEditorPage(
         content = TextFieldValue(ServerRequests(settingsRepository).getLatexContent(currentNoteId))
     }
 
-    fun insertLatexCommand(prefix: String, suffix: String = "}") {
-        val currentText = content.text
-        val selection = content.selection
-        val selectedText = currentText.substring(selection.start, selection.end)
-
-        val newText = currentText.replaceRange(selection.start, selection.end, "$prefix$selectedText$suffix")
-        val newCursorPos = selection.start + prefix.length + selectedText.length
-
-        content = TextFieldValue(text = newText, selection = TextRange(newCursorPos))
-    }
-
-    fun applySuggestion(suggestion: String) {
-        val text = content.text
-        val cursor = content.selection.start
-
-        val startIndex = cursor - (currentWord.length + 1) // Considero la lunghezza della parola più la \
-
-        var textToInsert = suggestion
-        var cursorOffset = suggestion.length
-
-        if (suggestion.startsWith("\\begin{")) {
-            val envName = suggestion.substringAfter("\\begin{").substringBefore("}")
-            val endStatement = "\\end{$envName}"
-
-            textToInsert = "$suggestion\n    \n$endStatement"
-
-            cursorOffset = suggestion.length + 5
-        }
-        else if (suggestion.endsWith("{}")) {
-            cursorOffset = suggestion.length - 1
-        }
-
-        val newText = text.replaceRange(startIndex, cursor, textToInsert)
-
-        val newCursorPos = startIndex + cursorOffset
-
-        content = TextFieldValue(text = newText, selection = TextRange(newCursorPos))
-        suggestedCommands = emptyList()
-    }
-
     Column(
         modifier = modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -164,26 +124,13 @@ fun LatexEditorPage(
                 onClick = {
                     scope.launch {
                         isCompiling = true
-                        latexCodeConverter.codeConverter(documentTitle, content.text)
+                        val contentSaved = ServerRequests(settingsRepository).getLatexContent(currentNoteId)
+                        latexCodeConverter.codeConverter(documentTitle, contentSaved)
                         isCompiling = false
                     }
                 }
             ) {
                 Text(if (isCompiling) "Generating..." else "Generate PDF")
-            }
-
-            Button(
-                colors = ButtonDefaults.buttonColors(containerColor = colorPalette.secondary),
-                enabled = !isCompiling,
-                onClick = {
-                    scope.launch {
-                        isCompiling = true
-                        ServerRequests(settingsRepository).updateLatexNote(currentNoteId, content.text)
-                        isCompiling = false
-                    }
-                }
-            ) {
-                Text("Save")
             }
 
             Button(
