@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import notesCopy.CopyNotesPage
+import org.example.agora.notesCopy.CopyNotesPage
 import org.example.agora.converter.ConverterPage
 import org.example.agora.editor.LatexEditorPage
 import org.example.agora.notes.NotesPage

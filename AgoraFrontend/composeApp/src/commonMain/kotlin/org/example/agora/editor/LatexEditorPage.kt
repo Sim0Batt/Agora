@@ -87,7 +87,7 @@ fun LatexEditorPage(
             }
         }
 
-        currentNoteId = if(settingsRepository.getLastLatexId() == -1) notes.first().id else settingsRepository.getLastLatexId()
+        currentNoteId = if(settingsRepository.getLastLatexId() == -1 && notes.isNotEmpty()) notes.first().id else settingsRepository.getLastLatexId()
 
         content = TextFieldValue(ServerRequests(settingsRepository).getLatexContent(currentNoteId))
     }

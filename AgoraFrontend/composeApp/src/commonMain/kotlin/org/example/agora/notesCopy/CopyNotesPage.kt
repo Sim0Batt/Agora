@@ -1,4 +1,4 @@
-package notesCopy
+package org.example.agora.notesCopy
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -99,7 +99,6 @@ fun CopyNotesPage(
                     }
                 }
 
-                // CONTENITORE PER IL TUO EDITOR LATEX
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
