@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.example.agora.editor.LatexIDE
 import org.example.agora.server.ServerRequests
@@ -23,6 +24,8 @@ fun CopyNotesPage(
     settingsRepository: SettingsRepository,
     fileSaver: FileSaver
 ) {
+    val scope = rememberCoroutineScope()
+
     var latexFiles by remember { mutableStateOf(listOf<String>()) }
     var selectedLatexFile by remember { mutableStateOf("") }
     var latexMenuExpanded by remember { mutableStateOf(false) }
@@ -159,7 +162,13 @@ fun CopyNotesPage(
                                 onClick = {
                                     selectedNormalNote = note
                                     normalMenuExpanded = false
-                                    selectedNoteContent = runBlocking { ServerRequests(settingsRepository).getNotesContent(currentNormalNoteId) }
+
+                                    currentNormalNoteId = note.split(" - ")[0].toInt()
+
+                                    scope.launch {
+                                        val rawContent = ServerRequests(settingsRepository).getNotesContent(currentNormalNoteId)
+                                        selectedNoteContent = rawContent.replace("\\n", "\n")
+                                    }
                                 }
                             )
                         }
