@@ -1,15 +1,17 @@
-package server.models
+package server.JSONmodels
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-class ContentJson(
-    val content: String
+class InfoLatexJson(
+    val id: Int,
+    val title: String,
 ) {
     override fun toString(): String {
         return """
 {
-    "content":"$content"
+    "id":"$id",
+    "title":"$title"
 }
         """.trimIndent()
     }

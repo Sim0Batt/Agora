@@ -9,14 +9,16 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.receive
+import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
-import server.models.AccountJson
-import server.models.ContentJson
-import server.models.CreateNoteJson
-import server.models.SaveNoteJson
-import server.models.UserJson
+import server.JSONmodels.AccountJson
+import server.JSONmodels.ContentJson
+import server.JSONmodels.CreateNoteJson
+import server.JSONmodels.LatexNoteJson
+import server.JSONmodels.SaveNoteJson
+import server.JSONmodels.UserJson
 
 
 fun Application.module() {
@@ -85,12 +87,66 @@ fun Application.module() {
 
         post("/content/{id}"){
             val noteId = call.parameters["id"]?.toIntOrNull() ?: -1
-            println(QueryManager.getContent(noteId))
+            println(QueryManager.getNotesContent(noteId))
             call.respondText(
                 ContentJson(
-                    QueryManager.getContent(noteId),
+                    QueryManager.getNotesContent(noteId),
                 ).toString()
             )
+        }
+
+        post ("/latex"){
+            val input = call.receive<LatexNoteJson>()
+            try {
+                val noteId = QueryManager.createLatexNote(input)
+                call.respond(noteId)
+            }catch (e: Exception){
+                println(e.stackTraceToString())
+                call.respondText("failure")
+            }
+        }
+
+        get("/latex/list/{userId}"){
+            val userId = call.parameters["userId"]?.toIntOrNull() ?: -1
+            try {
+                val result = QueryManager.getLatexNotesTitles(userId)
+                call.respond(result)
+            }catch (e: Exception){
+                println(e.stackTraceToString())
+                call.respondText("failure")
+            }
+        }
+
+        get ("/latex/{id}"){
+            val noteId = call.parameters["id"]?.toIntOrNull() ?: -1
+            try {
+                call.respondText(QueryManager.getLatexNoteContent(noteId))
+            }catch (e: Exception){
+                println(e.stackTraceToString())
+                call.respondText("failure")
+            }
+        }
+
+        delete ("/latex/{id}"){
+            val noteId = call.parameters["id"]?.toIntOrNull() ?: -1
+            try{
+                QueryManager.deleteLatexNote(noteId)
+                call.respondText("success")
+            }catch (e: Exception){
+                println(e.stackTraceToString())
+                call.respondText("failure")
+            }
+        }
+
+        post ("/latex/update"){
+            val notesJson = call.receive<SaveNoteJson>()
+            try{
+                QueryManager.updateLatexNote(notesJson)
+                call.respondText("Note updated")
+            }catch (e: Exception){
+                println(e.stackTraceToString())
+                call.respondText("failure")
+            }
         }
 
     }

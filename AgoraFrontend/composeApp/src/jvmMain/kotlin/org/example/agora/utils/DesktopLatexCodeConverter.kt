@@ -2,18 +2,30 @@ package org.example.agora.utils
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.util.concurrent.TimeUnit
 
 object DesktopLatexCodeConverter: LatexCodeConverter {
     override suspend fun codeConverter(title: String, latexCode: String): Boolean = withContext(Dispatchers.IO){
-        val tmpPath = "${SettingsRepository().getTmpPath("")}/$title.txt"
-        DesktopFileSaver.saveNoteToDisk(latexCode, tmpPath)
+        val safeTitle = title.replace(" ", "_")
+
+        val tmpDir = File(SettingsRepository().getTmpPath(""), safeTitle)
+        val pdfDir = File(SettingsRepository().getPdfPath(""), safeTitle)
+
+        if (!tmpDir.exists()) tmpDir.mkdirs()
+        if (!pdfDir.exists()) pdfDir.mkdirs()
+
+        val texFileName = "$safeTitle.tex"
+        val texFile = File(tmpDir, texFileName)
+
+        DesktopFileSaver.saveNoteToDisk(latexCode, texFile.absolutePath)
 
         val process = ProcessBuilder(
-            "/Library/TeX/texbin/pdflatex",
+            "pdflatex",
             "-interaction=nonstopmode",
-            "-output-directory", SettingsRepository().getSavePathFlow(""),
-            tmpPath
+            "-halt-on-error",
+            "-output-directory", pdfDir.absolutePath,
+            texFile.absolutePath
         ).start()
 
         val finished = process.waitFor(5, TimeUnit.SECONDS)

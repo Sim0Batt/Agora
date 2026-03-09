@@ -1,17 +1,17 @@
-package server.models
+package server.JSONmodels
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-class UserJson(
+class AccountJson (
     val name: String,
-    val password: String,
+    val id: Int
 ) {
     override fun toString(): String {
         return """
 {
-    "name":"$name",
-    "password":"$password"
+    "id":$id,
+    "name":"$name"
 }
         """.trimIndent()
     }

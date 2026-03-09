@@ -1,0 +1,9 @@
+package database.tables
+
+import org.jetbrains.exposed.dao.id.IntIdTable
+
+object LatexNotesTable: IntIdTable("LatexNotes"){
+    val title = varchar("title", 100)
+    val userId = integer("userId")
+    val content = text("content")
+}

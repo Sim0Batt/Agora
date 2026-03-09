@@ -42,7 +42,7 @@ fun NotesEditor(
             notesList.map {
                 if (it.id == noteId) selectedNote = it
             }
-            content = ServerRequests(settingsRepository).getContent(noteId).replace("\\n", "\n")
+            content = ServerRequests(settingsRepository).getNotesContent(noteId).replace("\\n", "\n")
         } catch (e: Exception) {
             println("Errore nel caricamento delle note: ${e.message}")
         }

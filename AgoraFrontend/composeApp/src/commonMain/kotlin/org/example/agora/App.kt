@@ -3,7 +3,6 @@ package org.example.agora
 import androidx.compose.runtime.*
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -19,6 +18,7 @@ import org.example.agora.notes.NotesPage
 import org.example.agora.notes.NewNotePage
 import org.example.agora.editor.NotesEditor
 import org.example.agora.home.HomePage
+import org.example.agora.notes.NewLatexCreationPage
 import org.example.agora.utils.FileSaver
 import org.example.agora.utils.LatexCodeConverter
 import org.example.agora.settings.SettingsPage
@@ -44,7 +44,6 @@ private val SemiDarkColorPalette = darkColorScheme(
 )
 
 @Composable
-@Preview
 fun App(
     modifier: Modifier = Modifier,
     settingsRepository: SettingsRepository,
@@ -121,6 +120,13 @@ fun App(
                         "converter" -> ConverterPage(
                             DarkColorPalette,
                             modifier
+                        )
+
+                        "newLatexNote" -> NewLatexCreationPage(
+                            modifier,
+                            DarkColorPalette,
+                            settingsRepository,
+                            fileSaver
                         )
                     }
                 }

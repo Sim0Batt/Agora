@@ -98,7 +98,7 @@ fun SettingsPage (
                         pdfPathString.value = newPath
                     }
                 },
-                label = { Text(settingsRepository.getSavePathFlow("/home/USER/documents/pdf/")) },
+                label = { Text(settingsRepository.getPdfPath("/home/USER/documents/pdf/")) },
                 modifier = Modifier.fillMaxWidth()
             )
             ButtonCard(
@@ -130,7 +130,7 @@ fun SettingsPage (
                         tmpPathString.value = newPath
                     }
                 },
-                label = { Text(settingsRepository.getSavePathFlow("/home/USER/documents/tmp/")) },
+                label = { Text(settingsRepository.getTmpPath("/home/USER/documents/tmp/")) },
                 modifier = Modifier.fillMaxWidth()
             )
             ButtonCard(

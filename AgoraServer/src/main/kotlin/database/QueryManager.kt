@@ -1,5 +1,7 @@
 package database
 
+import database.dao.LatexNotesEntity
+import database.tables.LatexNotesTable
 import database.tables.NotesTable
 import database.tables.UsersTable
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -8,11 +10,15 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
-import server.models.AccountJson
-import server.models.CreateNoteJson
-import server.models.NotesJson
-import server.models.SaveNoteJson
-import server.models.UserJson
+import server.JSONmodels.AccountJson
+import server.JSONmodels.CreateNoteJson
+import server.JSONmodels.InfoLatexJson
+import server.JSONmodels.LatexNoteJson
+import server.JSONmodels.NotesJson
+import server.JSONmodels.SaveNoteJson
+import server.JSONmodels.UserJson
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 object QueryManager {
     val connection = DatabaseConfig.getConnection()
@@ -130,7 +136,7 @@ object QueryManager {
         }
     }
 
-    fun getContent(noteId: Int): String{
+    fun getNotesContent(noteId: Int): String{
         var content = ""
         transaction (connection){
             content = NotesTable.selectAll().where{ NotesTable.id eq noteId }.firstOrNull()!![NotesTable.content]
@@ -140,4 +146,134 @@ object QueryManager {
         }
         return content
     }
+
+
+    fun createLatexNote(latexNoteJson: LatexNoteJson): Int{
+        val initialLatex = """
+\documentclass{article}
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{geometry}
+\usepackage{subcaption}
+\geometry{a4paper, top=1 cm, bottom=1.5cm, left=1.5cm, right=2cm, bindingoffset=5mm}
+\newenvironment{sistema}% 
+{\left\lbrace\begin{array}{@{}l@{}}}% 
+{\end{array}\right.} 
+\usepackage{hyperref}
+\usepackage{color}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{textcomp}
+\hypersetup{
+    colorlinks=true, 
+    linktoc=all,     
+    linkcolor=black,  
+}
+\DeclareMathSizes{11}{11}{11}{11}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\usepackage{xcolor}
+\colorlet{keyword}{blue!100!black!80}
+\colorlet{comment}{green!90!black!90}
+\usepackage{listings}
+
+\lstdefinelanguage{C}{
+  morekeywords={
+    void, int, int64, while, for
+  },
+  morecomment=[l]--
+}
+\lstdefinestyle{c}{
+  language     = C,
+  basicstyle   = \ttfamily,
+  keywordstyle = [1]\color{keyword}\bfseries,
+  keywordstyle = [2]\color{STD}\bfseries,
+  commentstyle = \color{comment}
+}
+  
+  
+
+
+\title{${latexNoteJson.title}}
+\author{Simone Battisti}
+\date{${LocalDate.now()}}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\pagebreak
+
+\section{Introduction}
+
+\end{document}
+
+        """.trimIndent()
+
+
+        try {
+            return transaction (connection){
+                LatexNotesTable.insert {
+                    it[LatexNotesTable.title] = latexNoteJson.title
+                    it[LatexNotesTable.userId] = latexNoteJson.userId
+                    it[LatexNotesTable.content] = initialLatex
+                }[LatexNotesTable.id].toString().toInt()
+            }
+        }catch (e: Exception){
+            println(e.message)
+            return -1
+        }
+    }
+
+    fun deleteLatexNote(noteId: Int){
+        try {
+            transaction (connection){
+                LatexNotesTable.deleteWhere { LatexNotesTable.id eq noteId }
+            }
+        }catch (e: Exception){
+            println(e.message)
+        }
+    }
+
+
+    fun getLatexNotesTitles(userId: Int): List<InfoLatexJson>{
+        val tmpList = mutableListOf<InfoLatexJson>()
+
+        try {
+            transaction(connection) {
+                LatexNotesTable.selectAll().where {
+                    LatexNotesTable.userId eq userId
+                }.map {
+                    tmpList.add(InfoLatexJson(it[LatexNotesTable.id].toString().toInt(), it[LatexNotesTable.title]))
+                }
+            }
+        }catch (e: Exception){
+            println(e.message)
+        }
+
+        return tmpList
+    }
+
+    fun getLatexNoteContent(noteId: Int): String{
+        try {
+            return transaction (connection){
+                LatexNotesTable.selectAll().where {
+                    LatexNotesTable.id eq noteId
+                }.firstOrNull()!![LatexNotesTable.content]
+            }
+        }catch (e: Exception){
+            println(e.message)
+            return ""
+        }
+    }
+
+    fun updateLatexNote(notesJson: SaveNoteJson){
+        transaction (connection){
+            LatexNotesTable.update({ LatexNotesTable.id eq notesJson.noteId}){
+                it[LatexNotesTable.content] = notesJson.content
+            }
+        }
+    }
+
 }
