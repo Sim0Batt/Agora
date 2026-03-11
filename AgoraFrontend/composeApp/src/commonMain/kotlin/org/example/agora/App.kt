@@ -1,15 +1,15 @@
 package org.example.agora
 
-import androidx.compose.runtime.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.*
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.example.agora.notesCopy.CopyNotesPage
@@ -24,7 +24,6 @@ import org.example.agora.utils.FileSaver
 import org.example.agora.utils.LatexCodeConverter
 import org.example.agora.settings.SettingsPage
 import org.example.agora.utils.SettingsRepository
-
 
 private val LightColorPalette = lightColorScheme(
     primary = Color(0xFF6200EE),
@@ -54,88 +53,122 @@ fun App(
     var selectedRoute by remember { mutableStateOf("home") }
     var navigator by remember { mutableStateOf(Navigator()) }
 
+    // Stato per controllare la visibilità della NavBar
+    var isNavBarVisible by remember { mutableStateOf(true) }
 
-    CompositionLocalProvider(LocalNavigator provides navigator){
+    CompositionLocalProvider(LocalNavigator provides navigator) {
         Surface(
             modifier = modifier.fillMaxSize(),
             color = DarkColorPalette.background
         ) {
-            Row(Modifier.fillMaxSize()) {
-                NavBar(
-                    selectedRoute = navigator.currentRoute,
-                    onRouteSelected = { route ->
-                        navigator.navigate(route)
-                    },
-                    modifier = Modifier.width(240.dp),
-                    SemiDarkColorPalette
-                )
+            // BoxWithConstraints ci permette di leggere la larghezza della finestra in tempo reale
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
 
-                Box(
-                    modifier = Modifier.weight(1f).padding(24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    when (navigator.currentRoute) {
-                        "home" -> HomePage(
-                            DarkColorPalette,
-                            modifier = Modifier.fillMaxHeight(),
-                            fileSaver,
-                            settingsRepository
-                        )
+                // Chiude automaticamente la NavBar se la finestra stringe sotto gli 800dp
+                LaunchedEffect(maxWidth) {
+                    isNavBarVisible = maxWidth > 800.dp
+                }
 
-                        "notes" -> NotesPage(
-                            modifier,
-                            DarkColorPalette,
-                            fileSaver,
-                            settingsRepository
-                        )
+                Row(Modifier.fillMaxSize()) {
 
-                        "settings" -> SettingsPage(
-                            settingsRepository,
-                            modifier,
-                            DarkColorPalette
+                    AnimatedVisibility(
+                        visible = isNavBarVisible,
+                        enter = slideInHorizontally(initialOffsetX = { -it }),
+                        exit = slideOutHorizontally(targetOffsetX = { -it })
+                    ) {
+                        NavBar(
+                            selectedRoute = navigator.currentRoute,
+                            onRouteSelected = { route ->
+                                navigator.navigate(route)
+                            },
+                            modifier = Modifier.width(240.dp).fillMaxHeight(),
+                            SemiDarkColorPalette
                         )
+                    }
 
-                        "new_page" -> NewNotePage(
-                            modifier,
-                            DarkColorPalette,
-                            settingsRepository,
-                            fileSaver
-                        )
+                    Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
 
-                        "editNote" -> NotesEditor(
-                            DarkColorPalette,
-                            modifier,
-                            settingsRepository,
-                            navigator.currentNoteId!!,
-                            fileSaver
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            IconButton(onClick = { isNavBarVisible = !isNavBarVisible }) {
+                                Icon(
+                                    imageVector = Icons.Default.Menu,
+                                    contentDescription = "Toggle Menu",
+                                    tint = DarkColorPalette.primary
+                                )
+                            }
+                        }
 
-                        "latex" -> LatexEditorPage(
-                            DarkColorPalette,
-                            modifier,
-                            settingsRepository,
-                            fileSaver,
-                            latexCodeConverter = latex
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            when (navigator.currentRoute) {
+                                "home" -> HomePage(
+                                    DarkColorPalette,
+                                    modifier = Modifier.fillMaxHeight(),
+                                    fileSaver,
+                                    settingsRepository
+                                )
 
-                        "converter" -> ConverterPage(
-                            DarkColorPalette,
-                            modifier
-                        )
+                                "notes" -> NotesPage(
+                                    modifier,
+                                    DarkColorPalette,
+                                    fileSaver,
+                                    settingsRepository
+                                )
 
-                        "newLatexNote" -> NewLatexCreationPage(
-                            modifier,
-                            DarkColorPalette,
-                            settingsRepository,
-                            fileSaver
-                        )
+                                "settings" -> SettingsPage(
+                                    settingsRepository,
+                                    modifier,
+                                    DarkColorPalette
+                                )
 
-                        "notescopy" -> CopyNotesPage(
-                            DarkColorPalette,
-                            modifier,
-                            settingsRepository,
-                            fileSaver
-                        )
+                                "new_page" -> NewNotePage(
+                                    modifier,
+                                    DarkColorPalette,
+                                    settingsRepository,
+                                    fileSaver
+                                )
+
+                                "editNote" -> NotesEditor(
+                                    DarkColorPalette,
+                                    modifier,
+                                    settingsRepository,
+                                    navigator.currentNoteId!!,
+                                    fileSaver
+                                )
+
+                                "latex" -> LatexEditorPage(
+                                    DarkColorPalette,
+                                    modifier,
+                                    settingsRepository,
+                                    fileSaver,
+                                    latexCodeConverter = latex
+                                )
+
+                                "converter" -> ConverterPage(
+                                    DarkColorPalette,
+                                    modifier
+                                )
+
+                                "newLatexNote" -> NewLatexCreationPage(
+                                    modifier,
+                                    DarkColorPalette,
+                                    settingsRepository,
+                                    fileSaver
+                                )
+
+                                "notescopy" -> CopyNotesPage(
+                                    DarkColorPalette,
+                                    modifier,
+                                    settingsRepository,
+                                    fileSaver
+                                )
+                            }
+                        }
                     }
                 }
             }
