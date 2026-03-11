@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -51,6 +52,7 @@ import org.example.agora.utils.LatexSyntaxTransformation
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.input.key.isShiftPressed
 import kotlinx.coroutines.launch
 import org.example.agora.server.ServerRequests
 import org.example.agora.utils.SettingsRepository
@@ -172,7 +174,7 @@ fun LatexIDE(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
             color = colorPalette.surfaceVariant.copy(alpha = 0.3f),
             shape = RoundedCornerShape(8.dp)
         ) {
@@ -189,19 +191,28 @@ fun LatexIDE(
                         modifier = Modifier.padding(end = 4.dp)
                     )
                 }
-                items(suggestedCommands) { suggestion ->
-                    Surface(
-                        color = Color.Transparent,
-                        shape = RoundedCornerShape(4.dp),
-                        onClick = { applySuggestion(suggestion) }
-                    ) {
+
+                if (suggestedCommands.isEmpty()) {
+                    item {
                         Text(
-                            text = suggestion,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 14.sp,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                            color = colorPalette.primary
+                            text = "No suggestions",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colorPalette.onSurfaceVariant
                         )
+                    }
+                }else{
+                    items(suggestedCommands) { suggestion ->
+                        Surface(
+                            color = Color.Transparent,
+                            shape = RoundedCornerShape(4.dp),
+                            onClick = { applySuggestion(suggestion) }
+                        ) {
+                            Text(
+                                text = suggestion,
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                color = colorPalette.primary
+                            )
+                        }
                     }
                 }
             }
@@ -257,6 +268,11 @@ fun LatexIDE(
                                     return@onPreviewKeyEvent true
                                 }
 
+                                Key.L -> {
+                                    insertLatexCommand("\\begin{itemize}\n  \\item ", "\n\\end{itemize}")
+                                    return@onPreviewKeyEvent true
+                                }
+
                                 Key.I -> {
                                     insertLatexCommand("\\textit{")
                                     return@onPreviewKeyEvent true
@@ -264,6 +280,7 @@ fun LatexIDE(
 
                                 else -> return@onPreviewKeyEvent false
                             }
+
                         }
                     }
                     false
