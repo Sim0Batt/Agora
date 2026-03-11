@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -65,7 +65,6 @@ fun LatexIDE(
     currentNoteId: Int,
 ) {
 
-
     var content by remember(initialContent) { mutableStateOf(TextFieldValue(initialContent)) }
     var suggestedCommands by remember { mutableStateOf<List<String>>(emptyList()) }
     var currentWord by remember { mutableStateOf("") }
@@ -113,13 +112,11 @@ fun LatexIDE(
         suggestedCommands = emptyList()
     }
 
-
-
-
+    // --- TOOLBAR SUPERIORE ---
     Surface(
-    modifier = Modifier.fillMaxWidth(),
-    color = colorPalette.surfaceVariant.copy(alpha = 0.5f),
-    shape = RoundedCornerShape(8.dp)
+        modifier = Modifier.fillMaxWidth(),
+        color = colorPalette.surfaceVariant.copy(alpha = 0.5f),
+        shape = RoundedCornerShape(8.dp)
     ) {
         Row(
             modifier = Modifier.padding(8.dp),
@@ -169,12 +166,48 @@ fun LatexIDE(
     }
 
 
-    // --- SPLIT SCREEN: EDITOR A SINISTRA, SUGGERIMENTI A DESTRA ---
-    Row(
-    modifier = Modifier.fillMaxWidth().width(1.dp),
-    horizontalArrangement = Arrangement.spacedBy(16.dp)
+    // --- AREA PRINCIPALE: SUGGERIMENTI IN ALTO, EDITOR IN BASSO ---
+    Column(
+        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // --- 1. EDITOR PRINCIPALE (Si allarga per prendere lo spazio) ---
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = colorPalette.surfaceVariant.copy(alpha = 0.3f),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            LazyRow(
+                modifier = Modifier.padding(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                item {
+                    Text(
+                        text = "Suggestions (Press Tab):",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colorPalette.primary,
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+                }
+                items(suggestedCommands) { suggestion ->
+                    Surface(
+                        color = Color.Transparent,
+                        shape = RoundedCornerShape(4.dp),
+                        onClick = { applySuggestion(suggestion) }
+                    ) {
+                        Text(
+                            text = suggestion,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            color = colorPalette.primary
+                        )
+                    }
+                }
+            }
+        }
+
+        // --- 2. EDITOR PRINCIPALE ---
         OutlinedTextField(
             value = content,
             onValueChange = { newValue ->
@@ -199,8 +232,8 @@ fun LatexIDE(
             ),
 
             modifier = Modifier
-                .fillMaxHeight()
-                .weight(1f)
+                .fillMaxWidth()
+                .weight(1f) // Prende tutto lo spazio verticale rimanente
                 .onPreviewKeyEvent { event ->
                     if (event.type == KeyEventType.KeyDown) {
 
@@ -241,44 +274,5 @@ fun LatexIDE(
                 unfocusedBorderColor = Color.Gray.copy(alpha = 0.5f)
             )
         )
-
-        // --- 2. PANNELLO LATERALE AUTOCOMPLETAMENTO ---
-        AnimatedVisibility(visible = suggestedCommands.isNotEmpty()) {
-            Surface(
-                modifier = Modifier.width(250.dp).fillMaxHeight(),
-                color = colorPalette.surfaceVariant.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(
-                        text = "Suggestions (Press Tab)",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = colorPalette.primary,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        items(suggestedCommands) { suggestion ->
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                color = Color.Transparent,
-                                shape = RoundedCornerShape(4.dp),
-                                onClick = { applySuggestion(suggestion) }
-                            ) {
-                                Text(
-                                    text = suggestion,
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 14.sp,
-                                    modifier = Modifier.padding(8.dp),
-                                    color = colorPalette.primary
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 }

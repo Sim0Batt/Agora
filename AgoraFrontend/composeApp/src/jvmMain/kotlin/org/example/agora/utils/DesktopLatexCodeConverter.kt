@@ -1,5 +1,6 @@
 package org.example.agora.utils
 
+import io.ktor.util.Platform
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -20,8 +21,10 @@ object DesktopLatexCodeConverter: LatexCodeConverter {
 
         DesktopFileSaver.saveNoteToDisk(latexCode, texFile.absolutePath)
 
+
+
         val process = ProcessBuilder(
-            "pdflatex",
+            "/Library/TeX/texbin/pdflatex",
             "-interaction=nonstopmode",
             "-halt-on-error",
             "-output-directory", pdfDir.absolutePath,

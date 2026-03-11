@@ -145,8 +145,13 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "org.example.agora"
+            packageName = "Agora"
             packageVersion = "1.0.0"
+            macOS {
+                iconFile.set(project.file(project.file("resources/logo_agora.icns")))
+            }
         }
     }
+
+
 }
