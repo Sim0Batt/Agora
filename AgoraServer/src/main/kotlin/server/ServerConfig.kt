@@ -157,7 +157,7 @@ class ServerConfig {
     fun run() {
         embeddedServer(
             Netty,
-            port = 18035,
+            port = System.getenv("PORT")?.toIntOrNull() ?: 18035,
             host = "0.0.0.0",
             module = Application::module
         ).start(wait = true)
