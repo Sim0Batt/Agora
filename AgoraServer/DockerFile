@@ -1,11 +1,21 @@
+# Fase 1: Compilazione con Gradle
 FROM gradle:8-jdk17 AS build
 COPY --chown=gradle:gradle . /home/gradle/src
 WORKDIR /home/gradle/src
-RUN gradle buildFatJar --no-daemon
 
+# Lancia il task specifico di shadowJar per creare il Fat JAR
+RUN gradle shadowJar --no-daemon
+
+# Fase 2: Creazione dell'immagine di Esecuzione (leggerissima)
 FROM openjdk:17-jdk-slim
-EXPOSE 8000
-RUN mkdir /app
-COPY --from=build /home/gradle/src/build/libs/*-all.jar /app/ktor-app.jar
 
+# Esponiamo la porta di default (Koyeb la sovrascriverà dinamicamente)
+EXPOSE 8000
+
+RUN mkdir /app
+
+# Copiamo ESATTAMENTE il file AgoraServer.jar generato da shadowJar
+COPY --from=build /home/gradle/src/build/libs/AgoraServer.jar /app/ktor-app.jar
+
+# Lancia il server
 ENTRYPOINT ["java", "-jar", "/app/ktor-app.jar"]
