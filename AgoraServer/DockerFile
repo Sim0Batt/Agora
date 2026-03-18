@@ -1,22 +1,23 @@
 # Fase 1: Compilazione con Gradle
 FROM gradle:8-jdk17 AS build
-COPY --chown=gradle:gradle . /home/gradle/src
-WORKDIR /home/gradle/src
 
-# Lancia il task specifico di shadowJar per creare il Fat JAR
+# Koyeb sta copiando l'intera repository (sia frontend che backend)
+COPY --chown=gradle:gradle . /home/gradle/src
+
+# Entriamo ESPLICITAMENTE nella cartella del backend
+WORKDIR /home/gradle/src/AgoraServer
+
+# Ora siamo nella cartella giusta, lanciamo la compilazione!
 RUN gradle shadowJar --no-daemon
 
 # Fase 2: Creazione dell'immagine di Esecuzione (ultra-leggera)
-# Usiamo Eclipse Temurin JRE su base Alpine Linux (il nuovo standard)
 FROM eclipse-temurin:17-jre-alpine
 
-# Esponiamo la porta di default (Koyeb la sovrascriverà dinamicamente)
 EXPOSE 8000
-
 RUN mkdir /app
 
-# Copiamo ESATTAMENTE il file AgoraServer.jar generato da shadowJar
-COPY --from=build /home/gradle/src/build/libs/AgoraServer.jar /app/ktor-app.jar
+# Andiamo a pescare il JAR compilato (nota che il percorso ora include /AgoraServer/)
+COPY --from=build /home/gradle/src/AgoraServer/build/libs/AgoraServer.jar /app/ktor-app.jar
 
 # Lancia il server
 ENTRYPOINT ["java", "-jar", "/app/ktor-app.jar"]
