@@ -38,11 +38,11 @@ class ServerRequests (settingsRepository: SettingsRepository){
         }
     }
 
-    val URL = "0.0.0.0:18035" // 13.60.112.248
+    val URL = "https://capitalist-nessa-simonorg-57c9d5ca.koyeb.app" // 13.60.112.248
 
 
     suspend fun getNotes(userId: String, fileSaver: FileSaver): List<NotesJson>{
-        val url = "http://$URL/note/$userId"
+        val url = "$URL/note/$userId"
 
         try {
             val rawResponse: String = client.get(url).bodyAsText()
@@ -65,7 +65,7 @@ class ServerRequests (settingsRepository: SettingsRepository){
     }
 
     suspend fun deleteNote(noteId: Int): String{
-        val url = "http://$URL/note/$noteId"
+        val url = "$URL/note/$noteId"
 
         try {
             client.delete(url).bodyAsText()
@@ -77,7 +77,7 @@ class ServerRequests (settingsRepository: SettingsRepository){
     }
 
     suspend fun createNote(createNoteJson: CreateNoteJson): String{
-        val url = "http://$URL/note"
+        val url = "$URL/note"
 
         try {
             client.post(url){
@@ -92,7 +92,7 @@ class ServerRequests (settingsRepository: SettingsRepository){
     }
 
     suspend fun updateNote(saveNoteJson: SaveNoteJson): String{
-        val url = "http://$URL/updateNote"
+        val url = "$URL/updateNote"
         try{
             client.post(url){
                 contentType(ContentType.Application.Json)
@@ -107,7 +107,7 @@ class ServerRequests (settingsRepository: SettingsRepository){
 
 
     suspend fun getNotesContent(noteId: Int): String{
-        val url = "http://$URL/content/$noteId"
+        val url = "$URL/content/$noteId"
         try{
             val response = Json.decodeFromString<ContentJson>(client.post(url).bodyAsText())
             return response.content
@@ -118,7 +118,7 @@ class ServerRequests (settingsRepository: SettingsRepository){
     }
 
     suspend fun createLatexNote(title: String, userId: Int): Int{
-        val url = "http://$URL/latex"
+        val url = "$URL/latex"
         val latexJson = LatexNoteJson(title, "", userId)
         try{
             val latexNoteId = client.post(url){
@@ -133,7 +133,7 @@ class ServerRequests (settingsRepository: SettingsRepository){
     }
 
     suspend fun getLatexContent(noteId: Int): String{
-        val url = "http://$URL/latex/$noteId"
+        val url = "$URL/latex/$noteId"
         try{
             val response = client.get(url).bodyAsText()
             return response
@@ -144,7 +144,7 @@ class ServerRequests (settingsRepository: SettingsRepository){
     }
 
     suspend fun deleteLatexNote(noteId: Int): String{
-        val url = "http://$URL/latex/$noteId"
+        val url = "$URL/latex/$noteId"
         try{
             client.delete(url).bodyAsText()
             return "success"
@@ -155,7 +155,7 @@ class ServerRequests (settingsRepository: SettingsRepository){
     }
 
     suspend fun getLatexNotesList(userId: Int): List<InfoLatexJson>{
-        val url = "http://$URL/latex/list/$userId"
+        val url = "$URL/latex/list/$userId"
         try{
             val response = client.get(url).bodyAsText()
             return Json.decodeFromString<List<InfoLatexJson>>(response)
@@ -166,7 +166,7 @@ class ServerRequests (settingsRepository: SettingsRepository){
     }
 
     suspend fun updateLatexNote(noteId: Int, content: String){
-        val url = "http://$URL/latex/update"
+        val url = "$URL/latex/update"
         val contentJson = SaveNoteJson(noteId, 0, content)
         try{
             client.post(url){
