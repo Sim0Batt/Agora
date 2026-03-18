@@ -11,7 +11,7 @@ WORKDIR /home/gradle/src/AgoraServer
 RUN gradle shadowJar --no-daemon
 
 # Fase 2: Creazione dell'immagine di Esecuzione (ultra-leggera)
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:24-jre-alpine
 
 EXPOSE 8000
 RUN mkdir /app
