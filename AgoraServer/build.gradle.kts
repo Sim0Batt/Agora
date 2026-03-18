@@ -56,9 +56,6 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.json:json:20231013")
 
-    // Koog
-    implementation("ai.koog:koog-agents:0.4.2")
-    testImplementation("ai.koog:agents-test:0.4.2")
     testImplementation(kotlin("test"))
 
     //Logging
@@ -67,6 +64,7 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation(kotlin("test"))
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks.test {

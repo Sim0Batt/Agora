@@ -24,7 +24,7 @@ object DesktopLatexCodeConverter: LatexCodeConverter {
 
 
         val process = ProcessBuilder(
-            "/Library/TeX/texbin/pdflatex",
+            "pdflatex",
             "-interaction=nonstopmode",
             "-halt-on-error",
             "-output-directory", pdfDir.absolutePath,

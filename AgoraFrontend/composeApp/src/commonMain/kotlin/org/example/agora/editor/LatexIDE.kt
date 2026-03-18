@@ -278,6 +278,14 @@ fun LatexIDE(
                                     return@onPreviewKeyEvent true
                                 }
 
+                                Key.S -> {
+                                    scope.launch {
+                                        isCompiling = true
+                                        ServerRequests(settingsRepository).updateLatexNote(currentNoteId, content.text)
+                                        isCompiling = false
+                                    }
+                                }
+
                                 else -> return@onPreviewKeyEvent false
                             }
 
