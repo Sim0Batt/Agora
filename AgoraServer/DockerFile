@@ -6,8 +6,9 @@ WORKDIR /home/gradle/src
 # Lancia il task specifico di shadowJar per creare il Fat JAR
 RUN gradle shadowJar --no-daemon
 
-# Fase 2: Creazione dell'immagine di Esecuzione (leggerissima)
-FROM openjdk:17-jdk-slim
+# Fase 2: Creazione dell'immagine di Esecuzione (ultra-leggera)
+# Usiamo Eclipse Temurin JRE su base Alpine Linux (il nuovo standard)
+FROM eclipse-temurin:17-jre-alpine
 
 # Esponiamo la porta di default (Koyeb la sovrascriverà dinamicamente)
 EXPOSE 8000
