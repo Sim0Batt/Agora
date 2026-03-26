@@ -38,7 +38,7 @@ class ServerRequests (settingsRepository: SettingsRepository){
         }
     }
 
-    val URL = "https://capitalist-nessa-simonorg-57c9d5ca.koyeb.app" // 13.60.112.248
+    val URL = "http://0.0.0.0:18035"
 
 
     suspend fun getNotes(userId: String, fileSaver: FileSaver): List<NotesJson>{

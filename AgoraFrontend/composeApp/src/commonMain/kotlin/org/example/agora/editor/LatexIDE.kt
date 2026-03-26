@@ -74,12 +74,16 @@ fun LatexIDE(
 
     val scope = rememberCoroutineScope()
 
-    fun insertLatexCommand(prefix: String, suffix: String = "}") {
+    fun insertLatexCommand(prefix: String, suffix: String = "}", includeSuffix: Boolean) {
         val currentText = content.text
         val selection = content.selection
         val selectedText = currentText.substring(selection.start, selection.end)
 
-        val newText = currentText.replaceRange(selection.start, selection.end, "$prefix$selectedText$suffix")
+        val newText = if(!includeSuffix) {
+            currentText.replaceRange(selection.start, selection.end, "$prefix$selectedText")
+        }else{
+            currentText.replaceRange(selection.start, selection.end, "$prefix$selectedText$suffix")
+        }
         val newCursorPos = selection.start + prefix.length + selectedText.length
 
         content = TextFieldValue(text = newText, selection = TextRange(newCursorPos))
@@ -127,25 +131,25 @@ fun LatexIDE(
         ) {
             Text("Insert:", style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(end = 8.dp))
 
-            IconButton(onClick = { insertLatexCommand("\\textbf{") }) {
+            IconButton(onClick = { insertLatexCommand("\\textbf{", includeSuffix = true) }) {
                 Icon(Icons.Default.FormatBold, contentDescription = "Grassetto")
             }
-            IconButton(onClick = { insertLatexCommand("\\textit{") }) {
+            IconButton(onClick = { insertLatexCommand("\\textit{", includeSuffix = true) }) {
                 Icon(Icons.Default.FormatItalic, contentDescription = "Corsivo")
             }
             IconButton(onClick = {
-                insertLatexCommand("\\begin{itemize}\n\\item ", "\n\\end{itemize}")
+                insertLatexCommand("\\begin{itemize}\n\\item ", "\n\\end{itemize}", includeSuffix = true)
             }) {
                 Icon(Icons.Default.FormatListBulleted, contentDescription = "Elenco Puntato")
             }
             Button(
-                onClick = { insertLatexCommand("\\section{") },
+                onClick = { insertLatexCommand("\\section{", includeSuffix = true) },
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 Text("\\section")
             }
             Button(
-                onClick = { insertLatexCommand("\\begin{equation}\n", "\n\\end{equation}") },
+                onClick = { insertLatexCommand("\\begin{equation}\n", "\n\\end{equation}", includeSuffix = true) },
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 Text("Math")
@@ -249,7 +253,7 @@ fun LatexIDE(
                     if (event.type == KeyEventType.KeyDown) {
 
                         val isConfirmKey =
-                            event.key == Key.Tab || event.key == Key.Enter || event.key == Key.NumPadEnter
+                            event.key == Key.Tab
                         if (isConfirmKey && suggestedCommands.isNotEmpty()) {
                             applySuggestion(suggestedCommands.first())
                             return@onPreviewKeyEvent true
@@ -262,19 +266,37 @@ fun LatexIDE(
 
                         val isCtrlOrCmd = event.isCtrlPressed || event.isMetaPressed
                         if (isCtrlOrCmd) {
+                            if(event.isShiftPressed){
+                                when (event.key) {
+                                    Key.U -> {
+                                        insertLatexCommand("\\item \\textbf{".trimIndent(), includeSuffix = true)
+                                        return@onPreviewKeyEvent true
+                                    }
+                                }
+                            }
                             when (event.key) {
                                 Key.B -> {
-                                    insertLatexCommand("\\textbf{")
+                                    insertLatexCommand("\\textbf{", includeSuffix = true)
                                     return@onPreviewKeyEvent true
                                 }
 
                                 Key.L -> {
-                                    insertLatexCommand("\\begin{itemize}\n  \\item ", "\n\\end{itemize}")
+                                    insertLatexCommand("\\begin{itemize}\n  \\item ", "\n\\end{itemize}", includeSuffix = true)
                                     return@onPreviewKeyEvent true
                                 }
 
                                 Key.I -> {
-                                    insertLatexCommand("\\textit{")
+                                    insertLatexCommand("\\textit{", includeSuffix = true)
+                                    return@onPreviewKeyEvent true
+                                }
+
+                                Key.G -> {
+                                    insertLatexCommand("\\begin{center}\n    %\\includegraphics[width=0.5\\linewidth]{}\n\\end{center}".trimIndent(), includeSuffix = false)
+                                    return@onPreviewKeyEvent true
+                                }
+
+                                Key.U -> {
+                                    insertLatexCommand("\\item ".trimIndent(), includeSuffix = false)
                                     return@onPreviewKeyEvent true
                                 }
 
