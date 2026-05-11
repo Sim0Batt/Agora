@@ -1,0 +1,5 @@
+AgoraServer/funnel-stderr.log
+AgoraServer/funnel-stdout.log
+AgoraServer/stderr.log
+AgoraServer/stdout.log
+web-app/frontend.pid
