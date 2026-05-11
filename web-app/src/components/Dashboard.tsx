@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 export const DashBoard = () => {
     const links: Record<string, string> = {
         'Home Page': '/',
-        'Notes': '/dashboard/licenses',
-        'Latex Ediot': '/latex',
+        'Notes': '/notes',
+        'Latex Editor': '/latex',
         'Settings': '/dashboard/user',
     };
 

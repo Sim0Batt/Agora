@@ -23,6 +23,29 @@ export interface User {
   verified: boolean;
 }
 
+export interface LatexNoteJson {
+  title: string;
+  content: string;
+  type: string;
+  userId: number;
+}
+
+export interface NoteJson {
+  title: string;
+  content: string;
+  type: string;
+  userId: number;
+}
+
+export interface NoteRecord {
+  id: number;
+  title: string;
+  length: number;
+  type: string;
+  userId: number;
+  content: string;
+}
+
 export interface Licence {
   licenseNumber: string;
   releasedBy: string;

@@ -151,7 +151,6 @@ object QueryManager {
     fun createLatexNote(latexNoteJson: LatexNoteJson): Int{
         val initialLatex = """
 \documentclass{article}
-\documentclass{article}
 \usepackage{graphicx} % Required for inserting images
 \usepackage{geometry}
 \usepackage{subcaption}
@@ -218,6 +217,7 @@ object QueryManager {
                     it[LatexNotesTable.title] = latexNoteJson.title
                     it[LatexNotesTable.userId] = latexNoteJson.userId
                     it[LatexNotesTable.content] = initialLatex
+                    it[LatexNotesTable.type] = latexNoteJson.type
                 }[LatexNotesTable.id].toString().toInt()
             }
         }catch (e: Exception){

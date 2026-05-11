@@ -6,14 +6,16 @@ import kotlinx.serialization.Serializable
 class LatexNoteJson(
     val title: String,
     val content: String,
-    val userId: Int
+    val userId: Int,
+    val type: String
 ) {
     override fun toString(): String {
         return """
 {
 "title":"$title",
 "content":"$content",
-"userId":"$userId"
+"userId":"$userId",
+"type":"$type"
 }
         """.trimIndent()
     }
