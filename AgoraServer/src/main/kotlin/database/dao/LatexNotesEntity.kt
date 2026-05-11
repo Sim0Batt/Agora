@@ -11,4 +11,5 @@ class LatexNotesEntity (id: EntityID<Int>) : IntEntity(id){
     var title by LatexNotesTable.title
     var userId by LatexNotesTable.userId
     var content by LatexNotesTable.content
+    var type by LatexNotesTable.type
 }

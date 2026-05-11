@@ -1,5 +1,6 @@
 import { HomePage } from './pages/HomePage';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { LatexNotes } from './pages/LatexNotes';
 import LatexEditor from './pages/LatexEditor';
 
 const router = createBrowserRouter([
@@ -9,6 +10,10 @@ const router = createBrowserRouter([
   },
   {
     path: '/latex',
+    element: <LatexNotes />,
+  },
+  {
+    path: '/latex/editor/:id',
     element: <LatexEditor />,
   },
 ]);

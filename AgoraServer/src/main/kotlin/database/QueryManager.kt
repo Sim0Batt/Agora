@@ -131,7 +131,7 @@ object QueryManager {
         transaction (connection){
             NotesTable.update({ NotesTable.id eq notesJson.noteId}){
                 it[NotesTable.content] = notesJson.content
-                it[NotesTable.length] = notesJson.length
+                it[NotesTable.length] = notesJson.length!!
             }
         }
     }
@@ -245,7 +245,7 @@ object QueryManager {
                 LatexNotesTable.selectAll().where {
                     LatexNotesTable.userId eq userId
                 }.map {
-                    tmpList.add(InfoLatexJson(it[LatexNotesTable.id].toString().toInt(), it[LatexNotesTable.title]))
+                    tmpList.add(InfoLatexJson(it[LatexNotesTable.id].toString().toInt(), it[LatexNotesTable.title], it[LatexNotesTable.type]))
                 }
             }
         }catch (e: Exception){

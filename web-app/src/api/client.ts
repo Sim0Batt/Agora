@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 export const apiClient = axios.create({
-  // Deve corrispondere al <Port> definito nell'XML del backend
-  baseURL: 'http://localhost:8080',
+  baseURL: '/api',
   headers: {
     'Content-Type': 'application/json',
   },

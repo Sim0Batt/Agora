@@ -110,6 +110,7 @@ fun Application.module() {
             val userId = call.parameters["userId"]?.toIntOrNull() ?: -1
             try {
                 val result = QueryManager.getLatexNotesTitles(userId)
+                println(result)
                 call.respond(result)
             }catch (e: Exception){
                 println(e.stackTraceToString())

@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 class SaveNoteJson(
     val noteId: Int,
-    val length: Int,
+    val length: Int? = null,
     val content: String,
 ) {
     override fun toString(): String {

@@ -17,7 +17,7 @@ export const DashBoard = () => {
     return (
         <header className="sticky top-0 z-50 w-full border-b border-border bg-surface-alt">
             <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-                <DashBoard />
+                <span className="text-base font-semibold tracking-wide text-text">Agorà</span>
 
                 <ul className="m-0 flex list-none items-center gap-5 p-0 font-medium text-text-muted">
                     {Object.keys(links).map((item) => (

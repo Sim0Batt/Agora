@@ -186028,3 +186028,67 @@ java.lang.UnsupportedOperationException: sun.misc.Unsafe unavailable
 13:49:42.416 [eventLoopGroupProxy-3-1] DEBUG io.netty.util.ResourceLeakDetectorFactory -- Loaded default ResourceLeakDetector: io.netty.util.ResourceLeakDetector@3e2cb201
 13:49:42.652 [eventLoopGroupProxy-4-1] DEBUG Exposed -- SELECT LatexNotes.id, LatexNotes.title, LatexNotes.userId, LatexNotes.content FROM LatexNotes WHERE LatexNotes.userId = 1
 13:49:42.718 [eventLoopGroupProxy-4-2] DEBUG Exposed -- SELECT LatexNotes.id, LatexNotes.title, LatexNotes.userId, LatexNotes.content FROM LatexNotes WHERE LatexNotes.id = 5
+09:35:56.944 [main] INFO io.ktor.server.Application -- Autoreload is disabled because the development mode is off.
+09:35:56.984 [main] INFO io.ktor.server.Application -- Application started in 0.128 seconds.
+09:35:56.988 [main] DEBUG io.netty.util.internal.logging.InternalLoggerFactory -- Using SLF4J as the default logging framework
+09:35:56.993 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- Java version: 24
+09:35:56.993 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- -Dio.netty.noUnsafe: false
+09:35:56.993 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- sun.misc.Unsafe: unavailable (io.netty.noUnsafe=true by default on Java 24+)
+09:35:56.994 [main] DEBUG io.netty.util.internal.PlatformDependent0 -- java.nio.DirectByteBuffer.<init>(long, {int,long}): unavailable
+09:35:57.028 [main] DEBUG io.netty.util.internal.PlatformDependent -- maxDirectMemory: 4294967296 bytes (maybe)
+09:35:57.028 [main] DEBUG io.netty.util.internal.PlatformDependent -- -Dio.netty.tmpdir: /var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/T (java.io.tmpdir)
+09:35:57.028 [main] DEBUG io.netty.util.internal.PlatformDependent -- -Dio.netty.bitMode: 64 (sun.arch.data.model)
+09:35:57.028 [main] DEBUG io.netty.util.internal.PlatformDependent -- Platform: MacOS
+09:35:57.028 [main] DEBUG io.netty.util.internal.PlatformDependent -- -Dio.netty.maxDirectMemory: -1 bytes
+09:35:57.028 [main] DEBUG io.netty.util.internal.CleanerJava9 -- java.nio.ByteBuffer.cleaner(): unavailable
+java.lang.UnsupportedOperationException: sun.misc.Unsafe unavailable
+	at io.netty.util.internal.CleanerJava9.<clinit>(CleanerJava9.java:70)
+	at io.netty.util.internal.PlatformDependent.<clinit>(PlatformDependent.java:193)
+	at io.netty.util.internal.ClassInitializerUtil.tryLoadClasses(ClassInitializerUtil.java:32)
+	at io.netty.channel.kqueue.Native.<clinit>(Native.java:65)
+	at io.netty.channel.kqueue.KQueue.<clinit>(KQueue.java:38)
+	at io.ktor.server.netty.NettyApplicationEngineKt.getChannelClass(NettyApplicationEngine.kt:306)
+	at io.ktor.server.netty.EventLoopGroupProxy$Companion.create(EventLoopGroupProxy.kt:32)
+	at io.ktor.server.netty.NettyApplicationEngine.connectionEventGroup_delegate$lambda$0(NettyApplicationEngine.kt:155)
+	at kotlin.SynchronizedLazyImpl.getValue(LazyJVM.kt:86)
+	at io.ktor.server.netty.NettyApplicationEngine.getConnectionEventGroup(NettyApplicationEngine.kt:154)
+	at io.ktor.server.netty.NettyApplicationEngine.createBootstrap(NettyApplicationEngine.kt:201)
+	at io.ktor.server.netty.NettyApplicationEngine.bootstraps_delegate$lambda$6(NettyApplicationEngine.kt:195)
+	at kotlin.SynchronizedLazyImpl.getValue(LazyJVM.kt:86)
+	at io.ktor.server.netty.NettyApplicationEngine.getBootstraps$ktor_server_netty(NettyApplicationEngine.kt:194)
+	at io.ktor.server.netty.NettyApplicationEngine.start(NettyApplicationEngine.kt:244)
+	at io.ktor.server.netty.NettyApplicationEngine.start(NettyApplicationEngine.kt:38)
+	at io.ktor.server.engine.EmbeddedServer.start(EmbeddedServerJvm.kt:336)
+	at server.ServerConfig.run(ServerConfig.kt:163)
+	at Main.main(Main.kt:6)
+09:35:57.033 [main] DEBUG io.netty.util.internal.CleanerJava24 -- java.nio.ByteBuffer.cleaner(): available
+09:35:57.033 [main] DEBUG io.netty.util.internal.PlatformDependent -- -Dio.netty.noPreferDirect: false
+09:35:57.035 [main] DEBUG io.netty.util.internal.NativeLibraryLoader -- -Dio.netty.native.workdir: /var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/T (io.netty.tmpdir)
+09:35:57.035 [main] DEBUG io.netty.util.internal.NativeLibraryLoader -- -Dio.netty.native.deleteLibAfterLoading: true
+09:35:57.035 [main] DEBUG io.netty.util.internal.NativeLibraryLoader -- -Dio.netty.native.tryPatchShadedId: true
+09:35:57.035 [main] DEBUG io.netty.util.internal.NativeLibraryLoader -- -Dio.netty.native.detectNativeLibraryDuplicates: true
+09:35:57.308 [main] DEBUG io.netty.util.internal.NativeLibraryLoader -- Successfully loaded the library /var/folders/zz/zyxvpxvq6csfxvn_n0000000000000/T/libnetty_transport_native_kqueue_aarch_64476164283692126325.dylib
+09:35:57.313 [main] DEBUG io.netty.util.NetUtil -- -Djava.net.preferIPv4Stack: false
+09:35:57.314 [main] DEBUG io.netty.util.NetUtil -- -Djava.net.preferIPv6Addresses: false
+09:35:57.323 [main] DEBUG io.netty.util.NetUtilInitializations -- Loopback interface: lo0 (lo0, 0:0:0:0:0:0:0:1%lo0)
+09:35:57.324 [main] DEBUG io.netty.util.NetUtil -- Failed to get SOMAXCONN from sysctl and file /proc/sys/net/core/somaxconn. Default: 128
+09:35:57.331 [main] DEBUG io.netty.channel.MultithreadEventLoopGroup -- -Dio.netty.eventLoopThreads: 20
+09:35:57.340 [main] DEBUG io.netty.util.concurrent.GlobalEventExecutor -- -Dio.netty.globalEventExecutor.quietPeriodSeconds: 1
+09:35:57.343 [main] DEBUG io.netty.util.internal.InternalThreadLocalMap -- -Dio.netty.threadLocalMap.stringBuilder.initialSize: 1024
+09:35:57.343 [main] DEBUG io.netty.util.internal.InternalThreadLocalMap -- -Dio.netty.threadLocalMap.stringBuilder.maxSize: 4096
+09:35:57.347 [main] DEBUG io.netty.util.internal.PlatformDependent -- org.jctools-core.MpscChunkedArrayQueue: unavailable
+09:35:57.374 [main] DEBUG io.netty.channel.DefaultChannelId -- -Dio.netty.processId: 5163 (auto-detected)
+09:35:57.377 [main] DEBUG io.netty.channel.DefaultChannelId -- -Dio.netty.machineId: e2:0f:19:ff:fe:7f:0e:5f (auto-detected)
+09:35:57.383 [main] DEBUG io.netty.util.ResourceLeakDetector -- -Dio.netty.leakDetection.level: simple
+09:35:57.383 [main] DEBUG io.netty.util.ResourceLeakDetector -- -Dio.netty.leakDetection.targetRecords: 4
+09:35:57.392 [main] DEBUG io.netty.buffer.AdaptiveByteBufAllocator -- -Dio.netty.allocator.useCachedMagazinesForNonEventLoopThreads: false
+09:35:57.397 [main] DEBUG io.netty.util.Recycler -- -Dio.netty.recycler.maxCapacityPerThread: 4096
+09:35:57.397 [main] DEBUG io.netty.util.Recycler -- -Dio.netty.recycler.ratio: 8
+09:35:57.397 [main] DEBUG io.netty.util.Recycler -- -Dio.netty.recycler.chunkSize: 32
+09:35:57.397 [main] DEBUG io.netty.util.Recycler -- -Dio.netty.recycler.blocking: false
+09:35:57.397 [main] DEBUG io.netty.util.Recycler -- -Dio.netty.recycler.batchFastThreadLocalOnly: true
+09:35:57.399 [main] DEBUG io.netty.buffer.ByteBufUtil -- -Dio.netty.allocator.type: adaptive
+09:35:57.399 [main] DEBUG io.netty.buffer.ByteBufUtil -- -Dio.netty.threadLocalDirectBufferSize: 0
+09:35:57.399 [main] DEBUG io.netty.buffer.ByteBufUtil -- -Dio.netty.maxThreadLocalCharBufferSize: 16384
+09:35:57.400 [main] DEBUG io.netty.bootstrap.ChannelInitializerExtensions -- -Dio.netty.bootstrap.extensions: null
+09:35:57.407 [DefaultDispatcher-worker-1] INFO io.ktor.server.Application -- Responding at http://0.0.0.0:18035

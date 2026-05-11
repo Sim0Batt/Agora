@@ -6,12 +6,14 @@ import kotlinx.serialization.Serializable
 class InfoLatexJson(
     val id: Int,
     val title: String,
+    val type: String,
 ) {
     override fun toString(): String {
         return """
 {
     "id":"$id",
-    "title":"$title"
+    "title":"$title",
+    "type":"$type"
 }
         """.trimIndent()
     }
