@@ -6,6 +6,7 @@ export const DashBoard = () => {
         'Home Page': '/',
         'Notes': '/notes',
         'Latex Editor': '/latex',
+        'Copia in LaTeX': '/notes/copy-to-latex',
         'Settings': '/dashboard/user',
     };
 

@@ -1,9 +1,8 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import Editor, { type Monaco } from '@monaco-editor/react';
-import type { editor as MonacoEditor, IDisposable } from 'monaco-editor';
+import { useState, useCallback, useEffect } from 'react';
 import { DashBoard } from '../components/Dashboard';
 import { useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
+import NoteEditorPanel from '../components/NoteEditorPanel';
 
 export default function NoteEditor() {
     const { id } = useParams();
@@ -11,8 +10,6 @@ export default function NoteEditor() {
     const [saving, setSaving] = useState(false);
     const [saveLog, setSaveLog] = useState<string | null>(null);
     const [logVisible, setLogVisible] = useState(false);
-    const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
-    const disposablesRef = useRef<IDisposable[]>([]);
 
     // ── Salvataggio ─────────────────────────────────────────────────────
     const saveNote = useCallback(async () => {
@@ -36,29 +33,6 @@ export default function NoteEditor() {
             setSaving(false);
         }
     }, [content, id]);
-
-    // ── Editor mount ────────────────────────────────────────────────────
-    const handleEditorMount = useCallback(
-        (editor: MonacoEditor.IStandaloneCodeEditor, monaco: Monaco) => {
-            editorRef.current = editor;
-
-            disposablesRef.current.forEach((d) => d.dispose());
-            disposablesRef.current = [];
-
-            // Ctrl+S / Cmd+S → salva
-            editor.addAction({
-                id: 'save-note',
-                label: 'Salva nota',
-                keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
-                run: () => {
-                    saveNote();
-                },
-            });
-
-            editor.focus();
-        },
-        [saveNote],
-    );
 
     // ── Fetch contenuto ─────────────────────────────────────────────────
     useEffect(() => {
@@ -94,25 +68,10 @@ export default function NoteEditor() {
 
             {/* ── Editor ───────────────────────────────────────────────── */}
             <div className="flex-1 overflow-hidden relative">
-                <Editor
-                    height="100%"
-                    defaultLanguage="plaintext"
-                    theme="vs-dark"
+                <NoteEditorPanel
                     value={content}
-                    onChange={(value) => setContent(value || '')}
-                    onMount={handleEditorMount}
-                    options={{
-                        minimap: { enabled: false },
-                        wordWrap: 'on',
-                        fontSize: 15,
-                        lineHeight: 1.6,
-                        padding: { top: 16 },
-                        scrollBeyondLastLine: false,
-                        renderLineHighlight: 'gutter',
-                        overviewRulerBorder: false,
-                        hideCursorInOverviewRuler: true,
-                        scrollbar: { verticalScrollbarSize: 6, horizontalScrollbarSize: 6 },
-                    }}
+                    onChange={setContent}
+                    onSave={saveNote}
                 />
             </div>
 
