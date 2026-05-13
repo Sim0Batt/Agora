@@ -1,6 +1,6 @@
 import { useRef, useCallback } from 'react';
 import Editor, { type Monaco } from '@monaco-editor/react';
-import type { editor as MonacoEditor, languages, IDisposable } from 'monaco-editor';
+import { editor as MonacoEditor, type languages, type IDisposable } from 'monaco-editor';
 
 // ─── CUSTOM KEYBOARD SHORTCUTS ─────────────────────────────────────────────
 
@@ -16,6 +16,7 @@ const CUSTOM_SHORTCUTS: Shortcut[] = [
     { label: 'Bold (textbf)', keys: 'Ctrl+B', wrap: ['\\textbf{', '}'] },
     { label: 'Italic (textit)', keys: 'Ctrl+I', wrap: ['\\textit{', '}'] },
     { label: 'Underline', keys: 'Ctrl+U', wrap: ['\\underline{', '}'] },
+    { label: 'Bold Item', keys: 'Ctrl+Shift+U', wrap: ['\\item \\textbf{', '}'] },
 ];
 
 // ─── LATEX COMPLETIONS ─────────────────────────────────────────────────────
@@ -122,6 +123,8 @@ interface LatexEditorPanelProps {
 export default function LatexEditorPanel({ value, onChange, onSave }: LatexEditorPanelProps) {
     const editorRef = useRef<MonacoEditor.IStandaloneCodeEditor | null>(null);
     const disposablesRef = useRef<IDisposable[]>([]);
+    const onSaveRef = useRef(onSave);
+    onSaveRef.current = onSave;
 
     const handleEditorMount = useCallback((editor: MonacoEditor.IStandaloneCodeEditor, monaco: Monaco) => {
         editorRef.current = editor;
@@ -195,6 +198,9 @@ export default function LatexEditorPanel({ value, onChange, onSave }: LatexEdito
                     if (shortcut.wrap) {
                         const selected = ed.getModel()?.getValueInRange(sel) ?? '';
                         ed.executeEdits('shortcut', [{ range: sel, text: `${shortcut.wrap[0]}${selected}${shortcut.wrap[1]}` }]);
+                        if (!selected) {
+                            ed.setPosition({ lineNumber: sel.startLineNumber, column: sel.startColumn + shortcut.wrap[0].length });
+                        }
                     } else if (shortcut.insert) {
                         ed.executeEdits('shortcut', [{ range: sel, text: shortcut.insert }]);
                     } else if (shortcut.run) {
@@ -205,17 +211,15 @@ export default function LatexEditorPanel({ value, onChange, onSave }: LatexEdito
         }
 
         // Ctrl+S / Cmd+S → salva
-        if (onSave) {
-            editor.addAction({
-                id: 'save-latex',
-                label: 'Salva LaTeX',
-                keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
-                run: () => { onSave(); },
-            });
-        }
+        editor.addAction({
+            id: 'save-latex',
+            label: 'Salva LaTeX',
+            keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS],
+            run: () => { onSaveRef.current?.(); },
+        });
 
         editor.focus();
-    }, [onSave]);
+    }, []);
 
     return (
         <Editor
@@ -237,9 +241,10 @@ export default function LatexEditorPanel({ value, onChange, onSave }: LatexEdito
                 hideCursorInOverviewRuler: true,
                 scrollbar: { verticalScrollbarSize: 6, horizontalScrollbarSize: 6 },
                 suggestOnTriggerCharacters: true,
-                quickSuggestions: true,
+                quickSuggestions: false,
                 snippetSuggestions: 'top',
                 tabCompletion: 'on',
+                stickyScroll: { enabled: false },
                 bracketPairColorization: { enabled: true },
                 autoClosingBrackets: 'always',
             }}
