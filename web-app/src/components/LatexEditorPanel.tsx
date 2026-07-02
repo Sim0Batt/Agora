@@ -16,7 +16,10 @@ const CUSTOM_SHORTCUTS: Shortcut[] = [
     { label: 'Bold (textbf)', keys: 'Ctrl+B', wrap: ['\\textbf{', '}'] },
     { label: 'Italic (textit)', keys: 'Ctrl+I', wrap: ['\\textit{', '}'] },
     { label: 'Underline', keys: 'Ctrl+U', wrap: ['\\underline{', '}'] },
-    { label: 'Bold Item', keys: 'Ctrl+Shift+U', wrap: ['\\item \\textbf{', '}'] },
+    { label: 'Bold Item', keys: 'Ctrl+Shift+L', wrap: ['\\item \\textbf{', '}'] },
+    { label: 'Itemize', keys: 'Ctrl+L', wrap: ['\\begin{itemize}\n    \\item ', '\n\\end{itemize}'] },
+    { label: 'Insert Graphics', keys: 'Ctrl+G', wrap: ['\\begin{center}\n    %\\includegraphics[width=0.8\\textwidth]{img/', '}\n\\end{center}'] },
+    { label: 'Equation', keys: 'Ctrl+P', wrap: ['$', '$'] },
 ];
 
 // ─── LATEX COMPLETIONS ─────────────────────────────────────────────────────
@@ -129,6 +132,12 @@ export default function LatexEditorPanel({ value, onChange, onSave }: LatexEdito
     const handleEditorMount = useCallback((editor: MonacoEditor.IStandaloneCodeEditor, monaco: Monaco) => {
         editorRef.current = editor;
 
+        // Sync external value changes imperatively
+        editor.onDidChangeModelContent(() => {
+            const currentValue = editor.getValue();
+            onChange(currentValue);
+        });
+
         disposablesRef.current.forEach(d => d.dispose());
         disposablesRef.current = [];
 
@@ -221,13 +230,19 @@ export default function LatexEditorPanel({ value, onChange, onSave }: LatexEdito
         editor.focus();
     }, []);
 
+    // Sync external value changes (e.g. from parent) without resetting cursor
+    const prevValueRef = useRef(value);
+    if (editorRef.current && value !== prevValueRef.current && value !== editorRef.current.getValue()) {
+        editorRef.current.setValue(value);
+    }
+    prevValueRef.current = value;
+
     return (
         <Editor
             height="100%"
             defaultLanguage="latex"
             theme="vs-dark"
-            value={value}
-            onChange={(v) => onChange(v || '')}
+            defaultValue={value}
             onMount={handleEditorMount}
             options={{
                 minimap: { enabled: false },
