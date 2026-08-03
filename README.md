@@ -118,8 +118,3 @@ The backend includes endpoints for:
 2. Start `AgoraServer`.
 3. Start either `web-app` or `AgoraFrontend` (or both).
 4. Create/edit notes and LaTeX notes through your preferred client.
-
-## License
-
-No license file is currently included in the repository.
-Add one if you plan to distribute or open-source the project.
