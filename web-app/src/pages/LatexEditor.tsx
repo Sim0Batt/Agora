@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { DashBoard } from '../components/Dashboard';
 import { useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
+import { latexApi } from '../api/latex';
 import LatexEditorPanel from '../components/LatexEditorPanel';
 
 // ─── COMPONENT ──────────────────────────────────────────────────────────────
@@ -31,9 +32,13 @@ Scrivi qui il tuo testo. Formula inline: $a^2 + b^2 = c^2$.
 export default function LatexEditor() {
     const { id } = useParams();
     const [code, setCode] = useState(DEFAULT_LATEX);
+    const [noteTitle, setNoteTitle] = useState('');
     const [compiling, setCompiling] = useState(false);
+    const [uploadingImages, setUploadingImages] = useState(false);
+    const [downloadingPdf, setDownloadingPdf] = useState(false);
     const [compileLog, setCompileLog] = useState<string | null>(null);
     const [logVisible, setLogVisible] = useState(false);
+    const imageInputRef = useRef<HTMLInputElement | null>(null);
 
     // ── Compilazione: salva + pdflatex ──────────────────────────────────
     const compilePdf = useCallback(async () => {
@@ -53,10 +58,54 @@ export default function LatexEditor() {
         }
     }, [code, id]);
 
+    const downloadPdf = useCallback(async () => {
+        if (!id) return;
+
+        setDownloadingPdf(true);
+        try {
+            const pdfBlob = await latexApi.downloadPdf(Number(id));
+            const fileUrl = URL.createObjectURL(pdfBlob);
+            const anchor = document.createElement('a');
+            anchor.href = fileUrl;
+            anchor.download = `${(noteTitle || `latex-${id}`).replace(/[^a-z0-9-_]+/gi, '_')}.pdf`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            window.setTimeout(() => URL.revokeObjectURL(fileUrl), 1000);
+        } finally {
+            setDownloadingPdf(false);
+        }
+    }, [id, noteTitle]);
+
+    const openImagePicker = useCallback(() => {
+        imageInputRef.current?.click();
+    }, []);
+
+    const handleImagesSelected = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(event.target.files ?? []);
+        event.target.value = '';
+
+        if (!files.length || !id) return;
+
+        setUploadingImages(true);
+        try {
+            await latexApi.uploadImages(noteTitle || `latex-${id}`, files);
+        } finally {
+            setUploadingImages(false);
+        }
+    }, [id, noteTitle]);
+
     useEffect(() => {
         const fetchContent = async () => {
-            const response = await apiClient.get('/latex/' + id, { responseType: 'text', transformResponse: [(data: string) => data] });
-            setCode(response.data);
+            const [contentResponse, notesResponse] = await Promise.all([
+                apiClient.get('/latex/' + id, { responseType: 'text', transformResponse: [(data: string) => data] }),
+                apiClient.get('/latex/list/1'),
+            ]);
+
+            setCode(contentResponse.data);
+
+            const currentNote = notesResponse.data.find((item: { id: string; title: string }) => Number(item.id) === Number(id));
+            setNoteTitle(currentNote?.title ?? '');
         };
         if (id) fetchContent();
     }, [id]);
@@ -76,6 +125,28 @@ export default function LatexEditor() {
                         {logVisible ? 'Nascondi log' : 'Mostra log'}
                     </button>
                 )}
+                <button
+                    onClick={openImagePicker}
+                    disabled={uploadingImages}
+                    className="px-4 py-1.5 text-sm font-medium rounded border border-border hover:bg-surface-alt transition-colors cursor-pointer disabled:opacity-50"
+                >
+                    {uploadingImages ? 'Caricamento…' : 'Carica immagini'}
+                </button>
+                <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={handleImagesSelected}
+                />
+                <button
+                    onClick={downloadPdf}
+                    disabled={downloadingPdf}
+                    className="px-4 py-1.5 text-sm font-medium rounded border border-border hover:bg-surface-alt transition-colors cursor-pointer disabled:opacity-50"
+                >
+                    {downloadingPdf ? 'Download…' : 'Scarica PDF'}
+                </button>
                 <button
                     onClick={compilePdf}
                     disabled={compiling}

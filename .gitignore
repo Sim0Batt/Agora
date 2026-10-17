@@ -3,3 +3,4 @@ AgoraServer/funnel-stdout.log
 AgoraServer/stderr.log
 AgoraServer/stdout.log
 web-app/frontend.pid
+dump-tabelle-agora-data.sql

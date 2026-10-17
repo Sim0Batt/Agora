@@ -5,8 +5,8 @@ import org.jetbrains.exposed.sql.Database
 object DatabaseConfig {
     fun getConnection(): Database {
         return Database.connect(
-            url = "jdbc:mysql://localhost:3306/AgoraDB?allowPublicKeyRetrieval=true&useSSL=false",
-            driver = "com.mysql.cj.jdbc.Driver",
+            url = "jdbc:mariadb://localhost:3306/AgoraDB",
+            driver = "org.mariadb.jdbc.Driver",
             user = "root",
             password = "REDACTED",
         )

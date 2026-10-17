@@ -1,7 +1,9 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
-    kotlin("jvm") version "2.2.20"
-    kotlin("plugin.serialization") version "2.2.20"
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    kotlin("jvm") version "2.3.0"
+    kotlin("plugin.serialization") version "2.3.0"
+    id("com.gradleup.shadow") version "9.6.1"
 }
 
 group = "org.example"
@@ -9,6 +11,12 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
 }
 
 val ktorVersion = "3.2.1"
@@ -19,8 +27,8 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-dao:0.50.0")
     implementation("org.jetbrains.exposed:exposed-jdbc:0.50.0")
 
-    //MySql Implementation
-    implementation("mysql:mysql-connector-java:8.0.33")
+    //MariaDB Implementation
+    implementation("org.mariadb.jdbc:mariadb-java-client:3.5.6")
     implementation("org.postgresql:postgresql:42.6.0")
 
     //Ktor
@@ -72,7 +80,10 @@ tasks.test {
     useJUnitPlatform()
 }
 kotlin {
-    jvmToolchain(24)
+    jvmToolchain(25)
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_25)
+    }
 }
 
 tasks {

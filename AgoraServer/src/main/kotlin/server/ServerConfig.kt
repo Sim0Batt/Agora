@@ -1,6 +1,7 @@
 package server
 
 
+import database.DatabaseConfig
 import database.QueryManager
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -9,22 +10,28 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
+import script.LatexManager
 import server.JSONmodels.AccountJson
 import server.JSONmodels.ContentJson
 import server.JSONmodels.CreateNoteJson
 import server.JSONmodels.LatexNoteJson
 import server.JSONmodels.SaveNoteJson
 import server.JSONmodels.UserJson
+import java.io.File
 
 
 fun Application.module() {
     install(ContentNegotiation) {
         json(Json { ignoreUnknownKeys = true })
     }
+
+    val latexManager = LatexManager(connection = DatabaseConfig.getConnection())
 
     routing {
         //Users Management
@@ -149,6 +156,38 @@ fun Application.module() {
                 call.respondText("failure")
             }
         }
+
+        post("/latex/download/{noteId}"){
+            try{
+                val noteId = call.parameters["noteId"]?.toIntOrNull() ?: -1
+                val filePath = latexManager.saveLatexFile(noteId)
+                val pdf = latexManager.generatePdf(filePath)
+                call.respondFile(pdf)
+            }catch (e: Exception){
+                println(e.stackTraceToString())
+                call.respondText("failure")
+            }
+
+        }
+
+
+        post("/latex/image"){
+            try{
+                val multipartData = call.receiveMultipart()
+
+                latexManager.saveImages(multipartData)
+
+                call.respondText("success")
+
+            }catch (e: Exception){
+                println(e.stackTraceToString())
+                call.respondText("failure")
+            }
+
+        }
+
+
+
 
     }
 

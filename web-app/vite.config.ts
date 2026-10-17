@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://100.124.163.38:18035',
+        target: 'http://YOUR_AGORA_PATH',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
