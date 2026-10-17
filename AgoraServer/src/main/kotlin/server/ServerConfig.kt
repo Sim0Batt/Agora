@@ -3,6 +3,7 @@ package server
 
 import database.DatabaseConfig
 import database.QueryManager
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.application.install
@@ -15,6 +16,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
+import io.netty.handler.codec.http.HttpStatusClass
 import kotlinx.serialization.json.Json
 import script.LatexManager
 import server.JSONmodels.AccountJson
@@ -157,37 +159,13 @@ fun Application.module() {
             }
         }
 
-        post("/latex/download/{noteId}"){
-            try{
-                val noteId = call.parameters["noteId"]?.toIntOrNull() ?: -1
-                val filePath = latexManager.saveLatexFile(noteId)
-                val pdf = latexManager.generatePdf(filePath)
-                call.respondFile(pdf)
+        get("/todo"){
+            try {
+                call.respond(QueryManager.getTodos())
             }catch (e: Exception){
-                println(e.stackTraceToString())
-                call.respondText("failure")
+                call.respond("Error during todo retrieve")
             }
-
         }
-
-
-        post("/latex/image"){
-            try{
-                val multipartData = call.receiveMultipart()
-
-                latexManager.saveImages(multipartData)
-
-                call.respondText("success")
-
-            }catch (e: Exception){
-                println(e.stackTraceToString())
-                call.respondText("failure")
-            }
-
-        }
-
-
-
 
     }
 

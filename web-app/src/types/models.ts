@@ -56,3 +56,9 @@ export interface Licence {
   qrCodeToken: string;
   userId: number;
 }
+
+export interface Todo {
+  title: string;
+  description: string;
+  expirationDate: string;
+}

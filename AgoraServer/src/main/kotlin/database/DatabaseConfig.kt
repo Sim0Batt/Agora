@@ -1,14 +1,23 @@
 package database
 
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.v1.jdbc.Database
 
 object DatabaseConfig {
     fun getConnection(): Database {
         return Database.connect(
-            url = "jdbc:mysql://localhost:3306/AgoraDB",
-            driver = "com.mysql.cj.jdbc.Driver",
-            user = "YOUR_MYSQL_USER",
-            password = "YOUR_MYSQL_PASSWORD",
+            url = "jdbc:mariadb://localhost:3306/AgoraDB",
+            driver = "org.mariadb.jdbc.Driver",
+            user = "root",
+            password = "REDACTED"
+        )
+    }
+
+    fun getGaiaConnection(): Database{
+        return Database.connect(
+            url = "jdbc:mariadb://localhost:3306/Gaia",
+            driver = "org.mariadb.jdbc.Driver",
+            user = "root",
+            password = "REDACTED"
         )
     }
 }

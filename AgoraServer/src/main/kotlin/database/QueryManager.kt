@@ -1,24 +1,24 @@
 package database
 
-import database.dao.LatexNotesEntity
 import database.tables.LatexNotesTable
 import database.tables.NotesTable
+import database.tables.TodosTable
 import database.tables.UsersTable
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import server.JSONmodels.AccountJson
 import server.JSONmodels.CreateNoteJson
 import server.JSONmodels.InfoLatexJson
 import server.JSONmodels.LatexNoteJson
 import server.JSONmodels.NotesJson
 import server.JSONmodels.SaveNoteJson
+import server.JSONmodels.TodoJson
 import server.JSONmodels.UserJson
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 object QueryManager {
     val connection = DatabaseConfig.getConnection()
@@ -276,4 +276,16 @@ object QueryManager {
         }
     }
 
+
+    fun getTodos(): List<TodoJson>{
+        return transaction(DatabaseConfig.getGaiaConnection()){
+            TodosTable.selectAll().map {
+                TodoJson(
+                    it[TodosTable.title],
+                    it[TodosTable.description],
+                    it[TodosTable.expirationDate],
+                )
+            }
+        }
+    }
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { DashBoard } from '../components/Dashboard';
+import { TodoWidget } from '../components/TodoWidget';
 
 interface RecentNote {
   id: number;
@@ -142,6 +143,10 @@ export const HomePage = () => {
                   ))}
                 </ul>
               )}
+            </div>
+
+            <div className="md:col-span-2">
+              <TodoWidget />
             </div>
 
           </div>

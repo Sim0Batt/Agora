@@ -20,16 +20,18 @@ java {
 }
 
 val ktorVersion = "3.2.1"
+val exposedVersion = "1.2.0"
+
 
 dependencies {
-    //Exposed Implementation
-    implementation("org.jetbrains.exposed:exposed-core:0.50.0")
-    implementation("org.jetbrains.exposed:exposed-dao:0.50.0")
-    implementation("org.jetbrains.exposed:exposed-jdbc:0.50.0")
-
-    //MariaDB Implementation
     implementation("org.mariadb.jdbc:mariadb-java-client:3.5.6")
-    implementation("org.postgresql:postgresql:42.6.0")
+    implementation("com.mysql:mysql-connector-j:9.4.0")
+
+
+    implementation("org.jetbrains.exposed:exposed-core:${exposedVersion}")
+    implementation("org.jetbrains.exposed:exposed-jdbc:${exposedVersion}")
+    implementation("org.jetbrains.exposed:exposed-java-time:${exposedVersion}")
+    implementation("org.jetbrains.exposed:exposed-dao:${exposedVersion}")
 
     //Ktor
     implementation("io.ktor:ktor-server-status-pages:${ktorVersion}")
