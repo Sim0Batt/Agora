@@ -195,7 +195,7 @@ object QueryManager {
 
 
 \title{${latexNoteJson.title}}
-\author{Simone Battisti}
+\author{AUTHOR_NAME}
 \date{${LocalDate.now()}}
 
 \begin{document}

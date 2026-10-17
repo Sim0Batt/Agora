@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://YOUR_AGORA_PATH',
+        target: 'http://YOUR_BACKEND_SERVER_URL', // Replace with your backend server URL
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
