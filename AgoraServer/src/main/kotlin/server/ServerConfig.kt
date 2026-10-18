@@ -1,6 +1,7 @@
 package server
 
 
+import configuration.ReadXMLConfiguration
 import database.QueryManager
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.*
@@ -27,15 +28,20 @@ import server.JSONmodels.TodoJson
 import server.JSONmodels.UserJson
 
 
+
+val configuration = ReadXMLConfiguration.getConfiguration()
+
 fun Application.module() {
     install(ContentNegotiation) {
         json(Json { ignoreUnknownKeys = true })
     }
+
+
     val connection = Database.connect(
-        url = "jdbc:mariadb://localhost:3306/AgoraDB",
-        driver = "org.mariadb.jdbc.Driver",
-        user = "root",
-        password = "REDACTED"
+        url = configuration.databaseConfig!!.dbConnectionString,
+        driver = configuration.databaseConfig.dbDriver,
+        user = configuration.databaseConfig.dbUser,
+        password = configuration.databaseConfig.dbPassword
     )
 
     val queryManager = QueryManager(connection)
@@ -211,8 +217,8 @@ class ServerConfig {
     fun run() {
         embeddedServer(
             Netty,
-            port = System.getenv("PORT")?.toIntOrNull() ?: 18035,
-            host = "0.0.0.0",
+            port = configuration.server!!.port.toInt() ?: 18035,
+            host = configuration.server!!.host,
             module = Application::module
         ).start(wait = true)
     }

@@ -26,6 +26,8 @@ val exposedVersion = "1.2.0"
 dependencies {
     implementation("org.mariadb.jdbc:mariadb-java-client:3.5.6")
     implementation("com.mysql:mysql-connector-j:9.4.0")
+    implementation("org.simpleframework:simple-xml:2.7.1")
+
 
 
     implementation("org.jetbrains.exposed:exposed-core:${exposedVersion}")

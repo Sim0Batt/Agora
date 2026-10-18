@@ -1,120 +1,167 @@
 # Agora
 
-Agora is a local-first note platform composed of three main parts:
+Agora is a self-hosted note platform: plain-text notes, LaTeX notes and a todo list, served by your own backend and editable from a web app or a desktop/mobile client.
 
-- a Kotlin/Ktor backend server (`AgoraServer`)
-- a web frontend built with React + Vite (`web-app`)
-- a Kotlin Multiplatform frontend (`AgoraFrontend`) for Desktop/JVM
+## Components
 
-The project is designed to run on your own machine or your own infrastructure. Notes and LaTeX content are managed by your own server and can be edited from either the web frontend or the KMP app.
+| Folder | Description | Stack |
+|--------|-------------|-------|
+| `AgoraServer/` | REST API and database layer | Kotlin, Ktor (Netty), Exposed, MariaDB/MySQL |
+| `web-app/` | Browser frontend | React 19, Vite, Tailwind, Monaco, KaTeX |
+| `AgoraFrontend/` | Multiplatform client | Kotlin Multiplatform / Compose (Desktop/JVM, Android, iOS) |
+| `agora_boostrap.sql` | Database bootstrap script (creates `AgoraDB` and its tables) | MySQL/MariaDB |
 
-## Repository Structure
+## Features
 
-- `AgoraServer/`: Ktor REST API + database access layer
-- `web-app/`: browser frontend for notes and LaTeX notes
-- `AgoraFrontend/`: Compose Multiplatform client (Android, iOS, Desktop/JVM)
-- `dump-tabelle-agora-data.sql`: SQL dump for database bootstrap/migration support
+- User registration and login, with notes scoped per user
+- Plain-text notes: create, update, delete
+- LaTeX notes: create, update, list, delete, with a dedicated editor
+- Todo list, including an Emacs-oriented export endpoint
+- Multiple clients (web and KMP) against the same backend
+- Everything can run on your own machine or network
 
-## Core Features
+## Architecture
 
-- Local/self-hosted architecture (no required external SaaS)
-- User login and user-scoped note management
-- Plain text note creation, update, and delete
-- LaTeX note creation, update, listing, and delete
-- Dedicated LaTeX editing workflow
-- Multi-client access:
-	- Web app for browser usage
-	- KMP app for mobile/desktop usage
-
-## Architecture at a Glance
-
-1. `AgoraServer` exposes REST endpoints (users, notes, LaTeX notes).
-2. Data is persisted in a local database (configured in server code).
-3. `web-app` calls the backend via `/api` (proxied by Vite in development).
-4. `AgoraFrontend` (KMP) calls the backend directly via HTTP.
-
-## Local-First / Self-Hosted Notes
-
-This repository is intended to be managed locally:
-
-- backend and database can run on your machine or your private network
-- clients connect to your backend endpoint
-- you keep control over the data and deployment
-
-If you want full local development, ensure every client points to your local server address and port.
+1. `AgoraServer` exposes a REST API (users, notes, LaTeX notes, todos) and stores data in MariaDB/MySQL.
+2. `web-app` calls the API under `/api`, proxied by Vite in development.
+3. `AgoraFrontend` calls the API directly over HTTP.
 
 ## Prerequisites
 
-- JDK 17+ (project currently uses modern Kotlin/Gradle setup)
-- Gradle (wrapper scripts are included)
+- JDK (the server Gradle toolchain targets Java 25; the Dockerfile builds with JDK 17 and runs on Temurin 24)
 - Node.js 18+ and npm
-- MySQL (or a compatible database setup according to server config)
+- MariaDB or MySQL
 
-## Backend Setup (`AgoraServer`)
+## Installation
 
-1. Configure database connection values in `AgoraServer/src/main/kotlin/database/DatabaseConfig.kt`.
-2. Start the server from the `AgoraServer` folder:
+### 1. Get the code
 
 ```bash
+git clone https://github.com/Sim0Batt/Agora.git
+cd Agora
+```
+
+### 2. Install prerequisites (example for Debian/Ubuntu)
+
+```bash
+sudo apt install mariadb-server nodejs npm openjdk-25-jdk   # use the JDK package available on your distro
+sudo systemctl enable --now mariadb
+```
+
+### 3. Create the database
+
+```bash
+sudo mariadb < agora_boostrap.sql
+```
+
+> The script **drops and recreates** `AgoraDB`. Do not run it on a database you want to keep.
+
+Create a dedicated DB user instead of using root:
+
+```sql
+CREATE USER 'agora'@'localhost' IDENTIFIED BY 'choose_a_strong_password';
+GRANT ALL PRIVILEGES ON AgoraDB.* TO 'agora'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+### 4. Configure the server
+
+Credentials and server settings are **not** stored in the code: the server reads them from an XML file outside the repository. It uses the first of these paths that exists:
+
+1. `/home/gaia/etc/supervisor/settings.xml`
+2. `/Users/Simone/workspace/etc/agora/settings.xml`
+3. `/home/simone/workspace/etc/agora/settings.xml`
+
+These paths are hard-coded in `AgoraServer/src/main/kotlin/configuration/ReadXMLConfiguration.kt`; edit them for your machine. If none exists, the server fails with `Configuration Read: File Not Found`.
+
+```xml
+<Configuration>
+  <Database>
+    <DBConnectionString>jdbc:mariadb://localhost:3306/AgoraDB</DBConnectionString>
+    <DBDriver>org.mariadb.jdbc.Driver</DBDriver>
+    <DBUser>agora</DBUser>
+    <DBPassword>choose_a_strong_password</DBPassword>
+  </Database>
+  <Server>
+    <Host>0.0.0.0</Host>
+    <Port>18035</Port>
+  </Server>
+</Configuration>
+```
+
+Never commit this file.
+
+### 5. Start the server
+
+```bash
+cd AgoraServer
 ./gradlew run
+# or build a standalone jar
+./gradlew shadowJar && java -jar build/libs/AgoraServer.jar
 ```
 
-or build the runnable jar:
+### 6. Start a client
 
-```bash
-./gradlew shadowJar
-java -jar build/libs/AgoraServer.jar
-```
-
-Default HTTP port is `18035` unless overridden by the `PORT` environment variable.
-
-## Web Frontend Setup (`web-app`)
-
-1. Install dependencies:
+Web app:
 
 ```bash
 cd web-app
 npm install
+npm run dev          # development, usually at http://localhost:5173
+npm run build        # production build in dist/
 ```
 
-2. Review API proxy target in `web-app/vite.config.ts` and point it to your backend host/port.
-3. Start development server:
+Set the backend address in the `proxy` section of `web-app/vite.config.ts` (e.g. `http://localhost:18035`, with no trailing whitespace).
+
+Desktop (KMP):
 
 ```bash
-npm run dev
-```
-
-The web app provides note and LaTeX-related pages, including a dedicated LaTeX editing flow.
-
-## KMP Frontend Setup (`AgoraFrontend`)
-
-From the `AgoraFrontend` folder, use Gradle tasks depending on target:
-
-- Desktop/JVM:
-
-```bash
+cd AgoraFrontend
 ./gradlew :composeApp:run
 ```
-KMP networking is implemented in shared code and targets the backend HTTP API.
 
-## API Scope (High Level)
+The backend URL is defined in `AgoraFrontend/composeApp/src/commonMain/kotlin/org/example/agora/server/ServerRequests.kt` (`URL`, default `http://0.0.0.0:18035`). Change it if the server runs on another host.
 
-The backend includes endpoints for:
+## Usage
 
-- user registration/login and lookup
-- text notes CRUD
-- LaTeX notes CRUD and listing
-- note content retrieval/update
+1. **Start order**: database, then `AgoraServer`, then a client.
+2. **Account**: register a user and log in from the client. All notes and todos are tied to your user.
+3. **Home** (`/`): overview and the todo widget, where you can add and delete todos.
+4. **Notes** (`/notes`): list, create and delete plain-text notes; open one (`/notes/editor/:id`) to edit its content, which is saved to the server.
+5. **LaTeX notes** (`/latex`): list and create LaTeX notes; open one (`/latex/editor/:id`) for the editor with a KaTeX live preview.
+6. **Convert**: `/notes/copy-to-latex` copies a plain note into a new LaTeX note.
+7. **Multiple devices**: point every client at the same server, so web and desktop see the same data.
+8. **Emacs**: `GET /todo/emacs` returns the todos in a format meant for Emacs integration.
 
-## Deployment Notes
+Quick API check once the server is running:
 
-- Everything can be hosted privately (local machine, NAS, VPS, LAN server).
-- A Dockerfile is available for backend containerization.
-- Keep secrets and DB credentials out of source control for production usage.
+```bash
+curl http://localhost:18035/user
+```
 
-## Suggested Development Flow
+## API overview
 
-1. Start database.
-2. Start `AgoraServer`.
-3. Start either `web-app` or `AgoraFrontend` (or both).
-4. Create/edit notes and LaTeX notes through your preferred client.
+| Area | Endpoints |
+|------|-----------|
+| Users | `GET/POST /user`, `GET /user/{id}`, `POST /login` |
+| Notes | `GET/POST /note`, `GET/DELETE /note/{id}`, `POST /updateNote`, `POST /content/{id}` |
+| LaTeX | `GET /latex/list/{userId}` and related note endpoints |
+| Todo | `GET/POST /todo`, `DELETE /todo/{todoId}`, `GET /todo/emacs` |
+
+See `AgoraServer/src/main/kotlin/server/ServerConfig.kt` for the full routing.
+
+## Docker
+
+`AgoraServer/DockerFile` builds the server in two stages (Gradle build, then a Temurin JRE image) and exposes port 8000. Build it from the repository root:
+
+```bash
+docker build -f AgoraServer/DockerFile -t agora-server .
+```
+
+The container still needs the XML configuration file at one of the paths above, for example mounted as a volume.
+
+## Security
+
+- Keep database credentials only in the external XML file, never in source code or commits.
+- If a credential was ever committed, rotate it and rewrite the history; deleting it in a later commit is not enough.
+- Passwords are stored as provided by the server logic; use the server on a trusted network or behind HTTPS.
