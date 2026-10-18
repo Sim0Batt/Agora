@@ -36,3 +36,12 @@ CREATE TABLE LatexNotes (
   PRIMARY KEY (id),
   INDEX idx_latexnotes_userId (userId)
 ) ENGINE=InnoDB;
+
+CREATE TABLE Todos(
+  id INT NOT NULL AUTO_INCREMENT,
+  title TEXT NOT NULL,
+  description LONGTEXT NOT NULL,
+  expirationDate VARCHAR(100) NOT NULL,
+  type VARCHAR(20) NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB;
