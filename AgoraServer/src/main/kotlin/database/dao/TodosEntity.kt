@@ -11,5 +11,6 @@ class TodosEntity(id: EntityID<Int>): IntEntity(id) {
     var title by TodosTable.title
     var description by TodosTable.description
     var expirationDate by TodosTable.expirationDate
+    var type by TodosTable.type
 
 }

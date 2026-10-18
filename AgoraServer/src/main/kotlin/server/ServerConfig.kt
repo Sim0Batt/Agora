@@ -1,7 +1,6 @@
 package server
 
 
-import database.DatabaseConfig
 import database.QueryManager
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.*
@@ -11,44 +10,52 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.receive
-import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
-import io.netty.handler.codec.http.HttpStatusClass
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.Query
 import script.LatexManager
+import script.TodoManager
 import server.JSONmodels.AccountJson
 import server.JSONmodels.ContentJson
 import server.JSONmodels.CreateNoteJson
 import server.JSONmodels.LatexNoteJson
 import server.JSONmodels.SaveNoteJson
+import server.JSONmodels.TodoJson
 import server.JSONmodels.UserJson
-import java.io.File
 
 
 fun Application.module() {
     install(ContentNegotiation) {
         json(Json { ignoreUnknownKeys = true })
     }
+    val connection = Database.connect(
+        url = "jdbc:mariadb://localhost:3306/AgoraDB",
+        driver = "org.mariadb.jdbc.Driver",
+        user = "root",
+        password = "REDACTED"
+    )
 
-    val latexManager = LatexManager(connection = DatabaseConfig.getConnection())
+    val queryManager = QueryManager(connection)
+    val latexManager = LatexManager(connection)
+    val todoManager = TodoManager(connection)
 
     routing {
         //Users Management
         get("/user") {
-            call.respondText(QueryManager.getUsers().joinToString(";\n"))
+            call.respondText(queryManager.getUsers().joinToString(";\n"))
         }
         post("/user") {
             val credentials = call.receive<UserJson>()
-            QueryManager.createUser(credentials.name, credentials.password)
+            queryManager.createUser(credentials.name, credentials.password)
             call.respondText("User created")
         }
 
         post("/login") {
             val credentials = call.receive<UserJson>()
-            val account = QueryManager.loginUser(credentials)
+            val account = queryManager.loginUser(credentials)
             if(account == AccountJson("null", -1)){
                 call.respondText("failure")
             }else{
@@ -58,48 +65,48 @@ fun Application.module() {
 
         get("/user/{id}") {
             val id = call.parameters["id"]?.toIntOrNull() ?: -1
-            val account = QueryManager.getSpecificUser(id)
+            val account = queryManager.getSpecificUser(id)
             call.respondText(account.toString())
         }
 
 
         //Notes Management
         get("/note") {
-            val result = QueryManager.getNotes().joinToString(";\n")
+            val result = queryManager.getNotes().joinToString(";\n")
             println(result)
             call.respondText(result)
         }
 
         get("/note/{id}") {
             val userId = call.parameters["id"].toString().toInt()
-            val result = QueryManager.getUserNotes(userId).joinToString(";\n")
+            val result = queryManager.getUserNotes(userId).joinToString(";\n")
             call.respondText(result)
         }
 
         delete("/note/{id}") {
             val id = call.parameters["id"]?.toIntOrNull() ?: -1
-            QueryManager.deleteNote(id)
+            queryManager.deleteNote(id)
             call.respondText("Note deleted")
         }
 
         post("/note") {
             val notesJson = call.receive<CreateNoteJson>()
-            QueryManager.createNote(notesJson)
+            queryManager.createNote(notesJson)
             call.respondText("Note created")
         }
 
         post("/updateNote"){
             val notesJson = call.receive<SaveNoteJson>()
-            QueryManager.updateNote(notesJson)
+            queryManager.updateNote(notesJson)
             call.respondText("Note updated")
         }
 
         post("/content/{id}"){
             val noteId = call.parameters["id"]?.toIntOrNull() ?: -1
-            println(QueryManager.getNotesContent(noteId))
+            println(queryManager.getNotesContent(noteId))
             call.respondText(
                 ContentJson(
-                    QueryManager.getNotesContent(noteId),
+                    queryManager.getNotesContent(noteId),
                 ).toString()
             )
         }
@@ -107,7 +114,7 @@ fun Application.module() {
         post ("/latex"){
             val input = call.receive<LatexNoteJson>()
             try {
-                val noteId = QueryManager.createLatexNote(input)
+                val noteId = queryManager.createLatexNote(input)
                 call.respond(noteId)
             }catch (e: Exception){
                 println(e.stackTraceToString())
@@ -118,7 +125,7 @@ fun Application.module() {
         get("/latex/list/{userId}"){
             val userId = call.parameters["userId"]?.toIntOrNull() ?: -1
             try {
-                val result = QueryManager.getLatexNotesTitles(userId)
+                val result = queryManager.getLatexNotesTitles(userId)
                 println(result)
                 call.respond(result)
             }catch (e: Exception){
@@ -130,7 +137,7 @@ fun Application.module() {
         get ("/latex/{id}"){
             val noteId = call.parameters["id"]?.toIntOrNull() ?: -1
             try {
-                call.respondText(QueryManager.getLatexNoteContent(noteId))
+                call.respondText(queryManager.getLatexNoteContent(noteId))
             }catch (e: Exception){
                 println(e.stackTraceToString())
                 call.respondText("failure")
@@ -140,7 +147,7 @@ fun Application.module() {
         delete ("/latex/{id}"){
             val noteId = call.parameters["id"]?.toIntOrNull() ?: -1
             try{
-                QueryManager.deleteLatexNote(noteId)
+                queryManager.deleteLatexNote(noteId)
                 call.respondText("success")
             }catch (e: Exception){
                 println(e.stackTraceToString())
@@ -151,7 +158,7 @@ fun Application.module() {
         post ("/latex/update"){
             val notesJson = call.receive<SaveNoteJson>()
             try{
-                QueryManager.updateLatexNote(notesJson)
+                queryManager.updateLatexNote(notesJson)
                 call.respondText("Note updated")
             }catch (e: Exception){
                 println(e.stackTraceToString())
@@ -161,11 +168,40 @@ fun Application.module() {
 
         get("/todo"){
             try {
-                call.respond(QueryManager.getTodos())
+                call.respond(todoManager.getTodos())
             }catch (e: Exception){
                 call.respond("Error during todo retrieve")
             }
         }
+
+        post("/todo") {
+            try {
+                val todoJson = call.receive<TodoJson>()
+                todoManager.addTodo(todoJson)
+                call.respond(HttpStatusCode.OK)
+            }catch (e: Exception){
+                call.respond("Error during todo creation")
+            }
+        }
+
+        delete("/todo/{todoId}"){
+            try {
+                val todoId = call.parameters["todoId"]
+                todoManager.removeTodo(todoId!!.toInt())
+                call.respond(HttpStatusCode.OK)
+            }catch (e: Exception){
+                call.respond("Error during todo delete")
+            }
+        }
+
+        get("/todo/emacs"){
+            try{
+                call.respond(todoManager.getOrgTodos())
+            }catch (e: Exception){
+                call.respond("Error during Org Extraction")
+            }
+        }
+
 
     }
 

@@ -5,18 +5,19 @@ import io.ktor.http.content.MultiPartData
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.http.content.streamProvider
-import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.v1.jdbc.Database
 import java.io.File
 import java.util.concurrent.TimeUnit
 
 class LatexManager(val connection: Database) {
+    private val queryManager = QueryManager(connection)
 
     fun saveLatexFile(noteId: Int): String{
         try{
             println("Started .tex file creation")
-            val content: String = QueryManager.getLatexNoteContent(noteId)
+            val content: String = queryManager.getLatexNoteContent(noteId)
 
-            val noteInfo = QueryManager.getLatexNotesTitles(1).filter {
+            val noteInfo = queryManager.getLatexNotesTitles(1).filter {
                 it.id == noteId
             }[0]
 

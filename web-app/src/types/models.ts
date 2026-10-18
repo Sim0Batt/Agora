@@ -57,7 +57,11 @@ export interface Licence {
   userId: number;
 }
 
+export type TodoType = 'Work' | 'University' | 'Other';
+
 export interface Todo {
+  id?: number;
+  type: TodoType;
   title: string;
   description: string;
   expirationDate: string;

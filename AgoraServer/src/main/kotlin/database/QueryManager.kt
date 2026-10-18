@@ -5,6 +5,7 @@ import database.tables.NotesTable
 import database.tables.TodosTable
 import database.tables.UsersTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -20,8 +21,7 @@ import server.JSONmodels.TodoJson
 import server.JSONmodels.UserJson
 import java.time.LocalDate
 
-object QueryManager {
-    val connection = DatabaseConfig.getConnection()
+class QueryManager(val connection: Database) {
     fun getUsers(): List<UserJson>{
         val tmp = mutableListOf<UserJson>()
         transaction (connection){
@@ -272,19 +272,6 @@ object QueryManager {
         transaction (connection){
             LatexNotesTable.update({ LatexNotesTable.id eq notesJson.noteId}){
                 it[LatexNotesTable.content] = notesJson.content
-            }
-        }
-    }
-
-
-    fun getTodos(): List<TodoJson>{
-        return transaction(DatabaseConfig.getGaiaConnection()){
-            TodosTable.selectAll().map {
-                TodoJson(
-                    it[TodosTable.title],
-                    it[TodosTable.description],
-                    it[TodosTable.expirationDate],
-                )
             }
         }
     }
