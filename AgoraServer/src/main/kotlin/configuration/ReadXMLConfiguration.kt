@@ -3,7 +3,7 @@ package configuration
 import org.simpleframework.xml.core.Persister
 import java.io.File
 
-var mainPath : String = "/home/gaia/etc/supervisor/settings.xml"
+var mainPath : String = "/home/gaia/etc/agora/settings.xml"
 var macPath : String = "/Users/Simone/workspace/etc/agora/settings.xml"
 
 var linuxPath : String = "/home/simone/workspace/etc/agora/settings.xml"
