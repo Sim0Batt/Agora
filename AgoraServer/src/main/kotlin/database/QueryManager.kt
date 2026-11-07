@@ -2,7 +2,6 @@ package database
 
 import database.tables.LatexNotesTable
 import database.tables.NotesTable
-import database.tables.TodosTable
 import database.tables.UsersTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -11,14 +10,13 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
-import server.JSONmodels.AccountJson
-import server.JSONmodels.CreateNoteJson
-import server.JSONmodels.InfoLatexJson
-import server.JSONmodels.LatexNoteJson
-import server.JSONmodels.NotesJson
-import server.JSONmodels.SaveNoteJson
-import server.JSONmodels.TodoJson
-import server.JSONmodels.UserJson
+import server.models.misc.AccountJson
+import server.models.notes.CreateNoteJson
+import server.models.latexnotes.InfoLatexJson
+import server.models.latexnotes.LatexNoteJson
+import server.models.notes.NotesJson
+import server.models.notes.SaveNoteJson
+import server.models.misc.UserJson
 import java.time.LocalDate
 
 class QueryManager(val connection: Database) {

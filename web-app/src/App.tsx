@@ -5,6 +5,7 @@ import LatexEditor from './pages/LatexEditor';
 import { NotesPage } from './pages/NotesPage';
 import NoteEditor from './pages/NoteEditor';
 import CopyNoteToLatex from './pages/CopyNoteToLatex';
+import { MusicPage } from './pages/MusicPage';
 
 const router = createBrowserRouter([
   {
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
   {
     path: '/notes/copy-to-latex',
     element: <CopyNoteToLatex />,
+  },
+  {
+    path: '/music',
+    element: <MusicPage />,
   },
 ]);
 

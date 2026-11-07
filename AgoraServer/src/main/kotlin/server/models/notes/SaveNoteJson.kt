@@ -1,14 +1,18 @@
-package server.JSONmodels
+package server.models.notes
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-class ContentJson(
-    val content: String
+class SaveNoteJson(
+    val noteId: Int,
+    val length: Int? = null,
+    val content: String,
 ) {
     override fun toString(): String {
         return """
 {
+    "noteId":"$noteId",
+    "length":"$length",
     "content":"$content"
 }
         """.trimIndent()

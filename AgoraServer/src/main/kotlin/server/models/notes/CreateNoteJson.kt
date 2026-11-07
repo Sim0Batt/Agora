@@ -1,21 +1,21 @@
-package server.JSONmodels
+package server.models.notes
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-class LatexNoteJson(
+class CreateNoteJson(
     val title: String,
-    val content: String,
+    val type: String,
+    val length: Int,
     val userId: Int,
-    val type: String
 ) {
     override fun toString(): String {
         return """
 {
-"title":"$title",
-"content":"$content",
-"userId":"$userId",
-"type":"$type"
+    "title":"$title",
+    "length":"$length",
+    "type":"$type",
+    "userId":"$userId",
 }
         """.trimIndent()
     }

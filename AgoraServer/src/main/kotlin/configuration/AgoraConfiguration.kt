@@ -10,4 +10,7 @@ class AgoraConfiguration {
 
     @field:Element(name = "Server", required = true)
     var server: ServerConfiguration? = null
+
+    @field:Element(name = "Telegram", required = true)
+    var telegram: TelegramConfiguration? = null
 }

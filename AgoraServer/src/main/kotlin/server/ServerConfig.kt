@@ -11,22 +11,26 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
+import it.tdlight.client.InputParameter
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.jdbc.Query
 import script.LatexManager
+import script.SongsManager
+import script.TelegramManager
 import script.TodoManager
-import server.JSONmodels.AccountJson
-import server.JSONmodels.ContentJson
-import server.JSONmodels.CreateNoteJson
-import server.JSONmodels.LatexNoteJson
-import server.JSONmodels.SaveNoteJson
-import server.JSONmodels.TodoJson
-import server.JSONmodels.UserJson
-
+import server.models.misc.AccountJson
+import server.models.notes.ContentJson
+import server.models.notes.CreateNoteJson
+import server.models.latexnotes.LatexNoteJson
+import server.models.music.MusicSearchJson
+import server.models.notes.SaveNoteJson
+import server.models.TodoJson
+import server.models.misc.UserJson
 
 
 val configuration = ReadXMLConfiguration.getConfiguration()
@@ -47,6 +51,13 @@ fun Application.module() {
     val queryManager = QueryManager(connection)
     val latexManager = LatexManager(connection)
     val todoManager = TodoManager(connection)
+    val songsManager = SongsManager(connection)
+    val tg = TelegramManager(configuration.telegram!!, connection, songsManager)
+
+
+    tg.start()
+    launch { runCatching { tg.connect() }.onFailure { log.error("Telegram", it) } }
+    monitor.subscribe(ApplicationStopped) { tg.close() }
 
     routing {
         //Users Management
@@ -208,6 +219,38 @@ fun Application.module() {
             }
         }
 
+
+        get("/admin/telegram/status") { call.respond(tg.waitingFor().map { it.name }) }
+        post("/admin/telegram/input/{param}") {
+            val p = InputParameter.valueOf(call.parameters["param"]!!)
+            call.respond(tg.provideInput(p, call.receiveText().trim()))
+        }
+
+        post("/music/search") {
+            val input = call.receive<MusicSearchJson>()
+            try{
+                println("Started searching for: ${input.title}")
+                call.respond(tg.search(input.title))
+            }catch (e: Exception){
+                call.respond(HttpStatusCode.BadRequest)
+                error("Error during search of media ${e.message}: ${e.stackTraceToString()}")
+            }
+        }
+        get("/music/{msg}/{idx}/download") {
+            val messageId = call.parameters["msg"]
+            val songId = call.parameters["idx"]
+            val t = tg.pick(messageId!!.toLong(), songId!!.toInt())
+            call.respond(t)
+        }
+
+        get("/songs"){
+            try {
+                call.respond(songsManager.getSongs())
+            }catch (e: Exception){
+                println(e.message)
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
 
     }
 

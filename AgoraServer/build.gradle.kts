@@ -11,6 +11,7 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+    maven("https://mvn.mchv.eu/repository/mchv/")
 }
 
 java {
@@ -78,6 +79,13 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation(kotlin("test"))
     implementation(kotlin("stdlib-jdk8"))
+
+    // Telegram Connection
+    implementation(platform("it.tdlight:tdlight-java-bom:3.5.7+td.1.8.68"))
+    implementation("it.tdlight:tdlight-java")
+    implementation("it.tdlight:tdlight-natives") {
+        artifact { classifier = "linux_amd64_gnu_ssl3" }
+    }
 }
 
 tasks.test {
