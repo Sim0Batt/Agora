@@ -1,14 +1,16 @@
 import { apiClient } from './client';
-import type { PickedTrack, Playlist, SearchResult, Song } from '../types/models';
+import type { Playlist, SearchSong, Song } from '../types/models';
 
 export const musicApi = {
-    search: async (title: string): Promise<SearchResult> => {
-        const response = await apiClient.post<SearchResult>('/music/search', { title });
+    search: async (title: string): Promise<SearchSong[]> => {
+        const response = await apiClient.post<SearchSong[]>('/music/search', { title });
+        if (!Array.isArray(response.data)) {
+            throw new Error(String(response.data));
+        }
         return response.data;
     },
-    download: async (messageId: number, index: number): Promise<PickedTrack> => {
-        const response = await apiClient.get<PickedTrack>(`/music/${messageId}/${index}/download`);
-        return response.data;
+    download: async (song: SearchSong): Promise<void> => {
+        await apiClient.post('/music/download', song, { timeout: 600_000 });
     },
     listSongs: async (): Promise<Song[]> => {
         const response = await apiClient.get<Song[]>('/songs');
@@ -39,6 +41,12 @@ export const musicApi = {
     },
     deletePlaylist: async (playlistId: string): Promise<void> => {
         await apiClient.delete(`/playlist/${playlistId}`);
+    },
+    importPlaylist: async (title: string, url: string): Promise<void> => {
+        await apiClient.post('/music/import', { title, url }, { timeout: 0 });
+    },
+    deleteSong: async (songId: string): Promise<void> => {
+        await apiClient.delete(`/song/${songId}`);
     },
     removeSongFromPlaylist: async (playlistId: string, songId: string): Promise<void> => {
         await apiClient.delete(`/playlist/${playlistId}/${songId}`);

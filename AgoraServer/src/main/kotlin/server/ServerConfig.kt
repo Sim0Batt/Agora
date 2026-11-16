@@ -16,20 +16,16 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.partialcontent.PartialContent
 import io.ktor.server.request.receive
-import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
-import it.tdlight.client.InputParameter
-import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.jdbc.Database
-import script.LatexManager
+import script.DytManager
 import script.PlaylistManager
 import script.SongsManager
-import script.TelegramManager
 import script.TodoManager
 import server.models.misc.AccountJson
 import server.models.notes.ContentJson
@@ -40,6 +36,8 @@ import server.models.notes.SaveNoteJson
 import server.models.TodoJson
 import server.models.misc.UserJson
 import server.models.music.CreatePlaylistJson
+import server.models.music.DownloadSongJson
+import server.models.music.SongJson
 import java.io.File
 
 
@@ -70,13 +68,9 @@ fun Application.module() {
     val queryManager = QueryManager(connection)
     val todoManager = TodoManager(connection)
     val songsManager = SongsManager(connection)
-    val tg = TelegramManager(configuration.telegram!!, connection, songsManager)
     val playlistManager = PlaylistManager(connection)
+    val dytManager = DytManager(configuration.music!!.ydtEnginePath, configuration.music!!.saveFolder)
 
-
-    tg.start()
-    launch { runCatching { tg.connect() }.onFailure { log.error("Telegram", it) } }
-    monitor.subscribe(ApplicationStopped) { tg.close() }
 
     routing {
         //Users Management
@@ -238,28 +232,37 @@ fun Application.module() {
             }
         }
 
-
-        get("/admin/telegram/status") { call.respond(tg.waitingFor().map { it.name }) }
-        post("/admin/telegram/input/{param}") {
-            val p = InputParameter.valueOf(call.parameters["param"]!!)
-            call.respond(tg.provideInput(p, call.receiveText().trim()))
-        }
-
         post("/music/search") {
             val input = call.receive<MusicSearchJson>()
             try{
                 println("Started searching for: ${input.title}")
-                call.respond(tg.search(input.title))
+                call.respond(dytManager.search(input.title))
             }catch (e: Exception){
                 call.respond(HttpStatusCode.BadRequest)
                 error("Error during search of media ${e.message}: ${e.stackTraceToString()}")
             }
         }
-        get("/music/{msg}/{idx}/download") {
-            val messageId = call.parameters["msg"]
-            val songId = call.parameters["idx"]
-            val t = tg.pick(messageId!!.toLong(), songId!!.toInt())
-            call.respond(t)
+        post("/music/download") {
+            val input = call.receive<SongJson>()
+            try {
+                dytManager.download(input.url)
+                songsManager.saveSong(input.title, input.author, input.duration, "${configuration.music!!.saveFolder}/${input.id}.webm")
+                call.respond("OK")
+            } catch (e: Exception) {
+                println("Download error: ${e.message}")
+                call.respond(HttpStatusCode.BadRequest, e.message ?: "Download fallito")
+            }
+        }
+
+        delete("/song/{songId}"){
+            val songId = call.parameters["songId"]!!
+            try {
+                songsManager.deleteSong(songId)
+                call.respond("OK")
+            } catch (e: Exception) {
+                println("Download error: ${e.message}")
+                call.respond(HttpStatusCode.BadRequest, e.message ?: "Download fallito")
+            }
         }
 
         get("/songs"){
@@ -330,6 +333,24 @@ fun Application.module() {
                 call.respond(HttpStatusCode.InternalServerError)
             }
         }
+
+        post("/music/import"){
+            val input = call.receive<DownloadSongJson>()
+            try {
+                val songs = dytManager.import(input.url)
+                val playlistId = playlistManager.createPlaylist(input.title)
+                songs.forEach { song: SongJson ->
+                    dytManager.download(song.url)
+                    val songId = songsManager.saveSong(song.title, song.author, song.duration, "${configuration.music!!.saveFolder}/${song.id}.webm")
+                    playlistManager.addSong(playlistId, songId)
+                }
+                call.respond("OK")
+            }catch (e: Exception){
+                println(e.message)
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
+
 
 
         get("/songs/{id}/stream") {

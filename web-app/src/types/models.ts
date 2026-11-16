@@ -67,22 +67,12 @@ export interface Todo {
   expirationDate: string;
 }
 
-export interface SongInfo {
-  index: number;
-  title: string;
-}
-
-export interface SearchResult {
-  messageId: number;
-  items: SongInfo[];
-}
-
-export interface PickedTrack {
+export interface SearchSong {
   id: string;
-  path: string;
   title: string;
-  artist: string;
+  author: string;
   duration: number;
+  url: string;
 }
 
 export interface Song {

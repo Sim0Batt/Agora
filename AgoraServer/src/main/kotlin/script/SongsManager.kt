@@ -4,10 +4,12 @@ import database.tables.SongsTable
 import io.ktor.util.debug.useContextElementInDebugMode
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import server.models.music.SongJson
+import java.io.File
 import java.util.UUID
 
 class SongsManager(val connection: Database) {
@@ -37,7 +39,8 @@ class SongsManager(val connection: Database) {
                         it[SongsTable.id].value,
                         it[SongsTable.title],
                         it[SongsTable.author],
-                        it[SongsTable.duration]
+                        it[SongsTable.duration],
+                        ""
                     )
                 }
             }
@@ -52,6 +55,22 @@ class SongsManager(val connection: Database) {
             SongsTable.selectAll().where { SongsTable.id eq id }.first().let {
                 it[SongsTable.path]
             }
+        }
+    }
+
+    fun deleteSong(id: String){
+        try {
+            val songPath = transaction(connection){
+                SongsTable.selectAll().where { SongsTable.id eq id }.first().let {
+                    it[SongsTable.path]
+                }
+            }
+            File(songPath).delete()
+            transaction(connection){
+                SongsTable.deleteWhere { SongsTable.id eq id }
+            }
+        }catch (e: Exception){
+            throw Exception("Error retrieving songs ${e.message}: ${e.stackTraceToString()}")
         }
     }
 }

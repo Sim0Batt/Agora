@@ -18,14 +18,14 @@ import server.models.music.SongJson
 import java.util.UUID
 
 class PlaylistManager(val connection: Database) {
-    fun createPlaylist(title: String){
+    fun createPlaylist(title: String): String{
         try{
-            transaction(connection) {
+            return transaction(connection) {
                 PlaylistsTable.insert {
                     it[PlaylistsTable.id] = UUID.randomUUID().toString()
                     it[PlaylistsTable.title] = title
                     it[PlaylistsTable.count] = 0
-                }
+                }[PlaylistsTable.id].toString()
             }
         }catch (e: Exception){
             throw Exception("Error while creating the playlist ${e.message}: ${e.stackTraceToString()}")
@@ -92,7 +92,8 @@ class PlaylistManager(val connection: Database) {
                         it[SongsTable.id].value,
                         it[SongsTable.title],
                         it[SongsTable.author],
-                        it[SongsTable.duration]
+                        it[SongsTable.duration],
+                        ""
                     )
                 }
         }

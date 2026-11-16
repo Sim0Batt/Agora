@@ -4,7 +4,7 @@ import { musicApi } from '../api/music';
 import { AddToPlaylist } from '../components/AddToPlaylist';
 import { ChevronDownIcon, PlayIcon, QueueIcon, ShuffleIcon } from '../components/Icons';
 import { useMusic } from '../context/musicContext';
-import type { PickedTrack, Playlist, SearchResult, Song } from '../types/models';
+import type { Playlist, SearchSong, Song } from '../types/models';
 
 const formatDuration = (seconds: number) => {
   const m = Math.floor(seconds / 60);
@@ -18,22 +18,32 @@ const dangerBtn =
   'inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-border px-3 py-1 text-sm transition-colors hover:border-red-400 hover:text-red-400 sm:min-h-0';
 
 const errorMessage = (e: unknown, fallback: string) => {
-  const message = (e as { response?: { data?: unknown } })?.response?.data;
-  return typeof message === 'string' && message ? message : fallback;
+  const err = e as { response?: { data?: unknown; status?: number }; code?: string; message?: string };
+  if (typeof err?.response?.data === 'string' && err.response.data) return err.response.data;
+  const detail = err?.response?.status ? `HTTP ${err.response.status}` : [err?.code, err?.message].filter(Boolean).join(' – ');
+  return detail ? `${fallback} (${detail})` : fallback;
 };
 
 export const MusicPage = () => {
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
-  const [result, setResult] = useState<SearchResult | null>(null);
+  const [result, setResult] = useState<SearchSong[] | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
-  const [downloaded, setDownloaded] = useState<PickedTrack | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [downloaded, setDownloaded] = useState<SearchSong | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
   const [songs, setSongs] = useState<Song[]>([]);
   const [songsError, setSongsError] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{ message: string; run: () => void } | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importTitle, setImportTitle] = useState('');
+  const [importUrl, setImportUrl] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importDone, setImportDone] = useState<string | null>(null);
+  const [libraryOpen, setLibraryOpen] = useState(true);
 
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [playlistsError, setPlaylistsError] = useState(false);
@@ -109,8 +119,42 @@ export const MusicPage = () => {
     }
   };
 
-  const handleDeletePlaylist = async (playlist: Playlist) => {
-    if (!window.confirm(`Eliminare la playlist "${playlist.title}"?`)) return;
+  const closeImport = () => {
+    if (importing) return;
+    setImportOpen(false);
+    setImportError(null);
+  };
+
+  const handleImport = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const title = importTitle.trim();
+    const url = importUrl.trim();
+    if (!title || !url || importing) return;
+    setImporting(true);
+    setImportError(null);
+    setImportDone(null);
+    try {
+      await musicApi.importPlaylist(title, url);
+      setImportDone(`Playlist "${title}" importata.`);
+      setImportTitle('');
+      setImportUrl('');
+      setImportOpen(false);
+    } catch (err) {
+      setImportError(errorMessage(err, 'Importazione fallita, riprova.'));
+    } finally {
+      setImporting(false);
+      loadPlaylists();
+      loadSongs();
+    }
+  };
+
+  const handleDeletePlaylist = (playlist: Playlist) =>
+    setConfirmAction({
+      message: `Eliminare la playlist "${playlist.title}"?`,
+      run: () => deletePlaylist(playlist),
+    });
+
+  const deletePlaylist = async (playlist: Playlist) => {
     setActionError(null);
     try {
       await musicApi.deletePlaylist(playlist.id);
@@ -129,6 +173,24 @@ export const MusicPage = () => {
       loadPlaylists();
     } catch {
       setActionError('Rimozione del brano dalla playlist fallita.');
+    }
+  };
+
+  const handleDeleteSong = (song: Song) =>
+    setConfirmAction({
+      message: `Eliminare "${song.title}" dalla libreria?`,
+      run: () => deleteSong(song),
+    });
+
+  const deleteSong = async (song: Song) => {
+    setActionError(null);
+    try {
+      await musicApi.deleteSong(song.id);
+      loadSongs();
+      loadPlaylists();
+      if (selectedPlaylist) loadPlaylistSongs(selectedPlaylist.id);
+    } catch {
+      setActionError('Eliminazione del brano fallita.');
     }
   };
 
@@ -166,18 +228,19 @@ export const MusicPage = () => {
     }
   };
 
-  const handleDownload = async (index: number) => {
-    if (!result || downloadingIdx !== null) return;
-    setDownloadingIdx(index);
+  const handleDownload = async (song: SearchSong) => {
+    if (downloadingId !== null) return;
+    setDownloadingId(song.id);
     setDownloadError(null);
     setDownloaded(null);
     try {
-      setDownloaded(await musicApi.download(result.messageId, index));
+      await musicApi.download(song);
+      setDownloaded(song);
       loadSongs();
     } catch (err) {
-      setDownloadError(errorMessage(err, 'Download fallito. I risultati potrebbero essere scaduti: rifai la ricerca.'));
+      setDownloadError(errorMessage(err, 'Download fallito, riprova.'));
     } finally {
-      setDownloadingIdx(null);
+      setDownloadingId(null);
     }
   };
 
@@ -211,35 +274,25 @@ export const MusicPage = () => {
           {downloadError && <p className="text-sm text-red-400">{downloadError}</p>}
           {downloaded && (
             <p className="rounded-lg border border-green-500/30 bg-green-500/15 px-4 py-2 text-sm text-green-400">
-              Scaricato: {downloaded.artist} – {downloaded.title} ({formatDuration(downloaded.duration)})
+              Scaricato: {downloaded.author} – {downloaded.title} ({formatDuration(downloaded.duration)})
             </p>
           )}
-          {downloaded && (
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface-alt px-4 py-3">
-              <span className="text-sm text-text-muted">Aggiungi alla playlist</span>
-              <AddToPlaylist
-                key={downloaded.id}
-                songId={downloaded.id}
-                playlists={playlists}
-                onAdded={handleAddedToPlaylist}
-              />
-            </div>
-          )}
-
           {result && (
             <ul className="divide-y divide-border rounded-lg border border-border bg-surface-alt">
-              {result.items.length === 0 && (
+              {result.length === 0 && (
                 <li className="px-4 py-3 text-sm text-text-muted">Nessun risultato.</li>
               )}
-              {result.items.map((item) => (
-                <li key={item.index} className="flex items-center justify-between gap-4 px-4 py-3">
-                  <span className="truncate">{item.title}</span>
+              {result.map((item) => (
+                <li key={item.id} className="flex items-center justify-between gap-4 px-4 py-3">
+                  <span className="truncate">
+                    {item.title} <span className="text-text-muted">– {item.author} ({formatDuration(item.duration)})</span>
+                  </span>
                   <button
-                    onClick={() => handleDownload(item.index)}
-                    disabled={downloadingIdx !== null}
+                    onClick={() => handleDownload(item)}
+                    disabled={downloadingId !== null}
                     className={`${smallBtn} disabled:opacity-50`}
                   >
-                    {downloadingIdx === item.index ? 'Download…' : 'Scarica'}
+                    {downloadingId === item.id ? 'Download…' : 'Scarica'}
                   </button>
                 </li>
               ))}
@@ -264,7 +317,19 @@ export const MusicPage = () => {
             >
               {creating ? 'Creazione…' : 'Crea'}
             </button>
+            <button
+              type="button"
+              onClick={() => setImportOpen(true)}
+              className="rounded-lg border border-border px-5 py-2 font-semibold transition-colors hover:border-accent hover:text-accent"
+            >
+              Importa da Playlist
+            </button>
           </form>
+          {importDone && (
+            <p className="rounded-lg border border-green-500/30 bg-green-500/15 px-4 py-2 text-sm text-green-400">
+              {importDone}
+            </p>
+          )}
           {createError && <p className="text-sm text-red-400">{createError}</p>}
           {actionError && <p className="text-sm text-red-400">{actionError}</p>}
 
@@ -372,7 +437,17 @@ export const MusicPage = () => {
 
         <section>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-text-muted">Libreria</h2>
+            <button
+              onClick={() => setLibraryOpen((o) => !o)}
+              aria-expanded={libraryOpen}
+              className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-text-muted transition-colors hover:text-accent"
+            >
+              Libreria
+              <span className="font-normal normal-case tracking-normal">
+                ({songs.length} {songs.length === 1 ? 'brano' : 'brani'})
+              </span>
+              <ChevronDownIcon className={`h-4 w-4 transition-transform ${libraryOpen ? 'rotate-180' : ''}`} />
+            </button>
             {songs.length > 0 && (
               <div className="flex items-center gap-2">
                 <button onClick={() => play(songs, 0, false)} className={smallBtn}>
@@ -384,7 +459,7 @@ export const MusicPage = () => {
               </div>
             )}
           </div>
-          {songsError ? (
+          {!libraryOpen ? null : songsError ? (
             <p className="text-sm text-text-muted">Impossibile caricare le canzoni.</p>
           ) : songs.length === 0 ? (
             <p className="text-sm text-text-muted">Nessuna canzone scaricata.</p>
@@ -419,6 +494,9 @@ export const MusicPage = () => {
                       onAdded={handleAddedToPlaylist}
                     />
                     <span className="shrink-0 font-mono text-sm text-text-muted">{formatDuration(song.duration)}</span>
+                    <button onClick={() => handleDeleteSong(song)} className={dangerBtn}>
+                      Elimina
+                    </button>
                   </div>
                 </li>
               ))}
@@ -426,6 +504,94 @@ export const MusicPage = () => {
           )}
         </section>
       </main>
+
+      {importOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          onClick={closeImport}
+        >
+          <form
+            onSubmit={handleImport}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md space-y-4 rounded-xl border border-border bg-surface-alt p-6"
+          >
+            <h2 className="text-lg font-semibold">Importa da Playlist</h2>
+            <input
+              value={importTitle}
+              onChange={(e) => setImportTitle(e.target.value)}
+              placeholder="Titolo della playlist"
+              maxLength={100}
+              disabled={importing}
+              autoFocus
+              className="w-full rounded-lg border border-border bg-surface px-4 py-2 text-text outline-none focus:border-accent disabled:opacity-50"
+            />
+            <input
+              value={importUrl}
+              onChange={(e) => setImportUrl(e.target.value)}
+              placeholder="URL della playlist YouTube"
+              disabled={importing}
+              className="w-full rounded-lg border border-border bg-surface px-4 py-2 text-text outline-none focus:border-accent disabled:opacity-50"
+            />
+            {importing && (
+              <div className="flex items-center gap-3 text-sm text-text-muted">
+                <span className="h-5 w-5 shrink-0 animate-spin rounded-full border-2 border-border border-t-accent" />
+                Importazione in corso: i brani vengono scaricati uno alla volta, può richiedere molto tempo. Non chiudere la pagina.
+              </div>
+            )}
+            {importError && <p className="text-sm text-red-400">{importError}</p>}
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeImport}
+                disabled={importing}
+                className="rounded-lg border border-border px-4 py-2 transition-colors hover:border-accent disabled:opacity-50"
+              >
+                Annulla
+              </button>
+              <button
+                type="submit"
+                disabled={importing || !importTitle.trim() || !importUrl.trim()}
+                className="rounded-lg bg-accent px-5 py-2 font-semibold text-white transition-colors hover:bg-accent-hover disabled:opacity-50"
+              >
+                {importing ? 'Importazione…' : 'Importa'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {confirmAction && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+          onClick={() => setConfirmAction(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm space-y-4 rounded-xl border border-border bg-surface-alt p-6"
+          >
+            <p>{confirmAction.message}</p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmAction(null)}
+                className="rounded-lg border border-border px-4 py-2 transition-colors hover:border-accent"
+              >
+                Annulla
+              </button>
+              <button
+                autoFocus
+                onClick={() => {
+                  const { run } = confirmAction;
+                  setConfirmAction(null);
+                  run();
+                }}
+                className="rounded-lg bg-red-500 px-5 py-2 font-semibold text-white transition-colors hover:bg-red-600"
+              >
+                Elimina
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
