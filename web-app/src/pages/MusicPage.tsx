@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { DashBoard } from '../components/Dashboard';
 import { musicApi } from '../api/music';
 import { AddToPlaylist } from '../components/AddToPlaylist';
+import { ChevronDownIcon, PlayIcon, QueueIcon, ShuffleIcon } from '../components/Icons';
 import { useMusic } from '../context/musicContext';
 import type { PickedTrack, Playlist, SearchResult, Song } from '../types/models';
 
@@ -12,7 +13,7 @@ const formatDuration = (seconds: number) => {
 };
 
 const smallBtn =
-  'inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-border px-3 py-1 text-sm transition-colors hover:border-accent hover:text-accent sm:min-h-0';
+  'inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-md border border-border px-3 py-1 text-sm transition-colors hover:border-accent hover:text-accent sm:min-h-0';
 const dangerBtn =
   'inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border border-border px-3 py-1 text-sm transition-colors hover:border-red-400 hover:text-red-400 sm:min-h-0';
 
@@ -283,8 +284,9 @@ export const MusicPage = () => {
                         className="flex min-h-12 min-w-0 flex-1 items-center justify-between gap-4 px-4 py-3 text-left transition-colors hover:text-accent"
                       >
                         <span className="truncate font-medium">{playlist.title}</span>
-                        <span className="shrink-0 text-sm text-text-muted">
-                          {playlist.count} {playlist.count === 1 ? 'brano' : 'brani'} {open ? '▲' : '▼'}
+                        <span className="inline-flex shrink-0 items-center gap-1.5 text-sm text-text-muted">
+                          {playlist.count} {playlist.count === 1 ? 'brano' : 'brani'}
+                          <ChevronDownIcon className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
                         </span>
                       </button>
                       <div className="flex flex-wrap items-center gap-2 px-4 pb-3 sm:pb-0 sm:pl-0">
@@ -293,21 +295,21 @@ export const MusicPage = () => {
                           aria-label={`Riproduci ${playlist.title}`}
                           className={smallBtn}
                         >
-                          ▶ Riproduci
+                          <PlayIcon className="h-3.5 w-3.5" /> Riproduci
                         </button>
                         <button
                           onClick={() => withPlaylistSongs(playlist, (songs) => play(songs, 0, true))}
                           aria-label={`Riproduci ${playlist.title} in ordine casuale`}
                           className={smallBtn}
                         >
-                          🔀
+                          <ShuffleIcon className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => withPlaylistSongs(playlist, enqueue)}
                           aria-label={`Accoda ${playlist.title}`}
                           className={smallBtn}
                         >
-                          ＋ Coda
+                          <QueueIcon className="h-3.5 w-3.5" /> Coda
                         </button>
                         <button onClick={() => handleDeletePlaylist(playlist)} className={dangerBtn}>
                           Elimina
@@ -340,13 +342,13 @@ export const MusicPage = () => {
                                     aria-label={`Riproduci ${song.title}`}
                                     className={smallBtn}
                                   >
-                                    ▶
+                                    <PlayIcon className="h-3.5 w-3.5" />
                                   </button>
                                   <button onClick={() => playNext([song])} className={smallBtn}>
                                     Dopo
                                   </button>
                                   <button onClick={() => enqueue([song])} className={smallBtn}>
-                                    ＋ Coda
+                                    <QueueIcon className="h-3.5 w-3.5" /> Coda
                                   </button>
                                   <button
                                     onClick={() => handleRemoveSong(playlist.id, song.id)}
@@ -374,10 +376,10 @@ export const MusicPage = () => {
             {songs.length > 0 && (
               <div className="flex items-center gap-2">
                 <button onClick={() => play(songs, 0, false)} className={smallBtn}>
-                  ▶ Riproduci tutto
+                  <PlayIcon className="h-3.5 w-3.5" /> Riproduci tutto
                 </button>
                 <button onClick={() => play(songs, 0, true)} aria-label="Riproduci tutto in ordine casuale" className={smallBtn}>
-                  🔀
+                  <ShuffleIcon className="h-3.5 w-3.5" />
                 </button>
               </div>
             )}
@@ -403,13 +405,13 @@ export const MusicPage = () => {
                       aria-label={`Riproduci ${song.title}`}
                       className={smallBtn}
                     >
-                      ▶
+                      <PlayIcon className="h-3.5 w-3.5" />
                     </button>
                     <button onClick={() => playNext([song])} className={smallBtn}>
                       Dopo
                     </button>
                     <button onClick={() => enqueue([song])} className={smallBtn}>
-                      ＋ Coda
+                      <QueueIcon className="h-3.5 w-3.5" /> Coda
                     </button>
                     <AddToPlaylist
                       songId={song.id}

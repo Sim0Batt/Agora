@@ -41,6 +41,9 @@ dependencies {
     implementation("io.ktor:ktor-server-core-jvm:${ktorVersion}")
     implementation("io.ktor:ktor-server-config-yaml:${ktorVersion}")
     implementation("io.ktor:ktor-server-netty:${ktorVersion}")
+    implementation("io.ktor:ktor-server-partial-content:${ktorVersion}")
+    implementation("io.ktor:ktor-server-cors:${ktorVersion}")
+    implementation("io.ktor:ktor-server-auto-head-response:${ktorVersion}")
     implementation("io.ktor:ktor-server-content-negotiation:${ktorVersion}")
     implementation("io.ktor:ktor-serialization-kotlinx-json:${ktorVersion}")
     implementation("io.ktor:ktor-server-core:${ktorVersion}")
@@ -83,8 +86,18 @@ dependencies {
     // Telegram Connection
     implementation(platform("it.tdlight:tdlight-java-bom:3.5.7+td.1.8.68"))
     implementation("it.tdlight:tdlight-java")
-    implementation("it.tdlight:tdlight-natives") {
-        artifact { classifier = "linux_amd64_gnu_ssl3" }
+    val osName = System.getProperty("os.name").lowercase()
+    val osArch = System.getProperty("os.arch").lowercase()
+    val isArm = osArch == "aarch64" || osArch == "arm64"
+    listOf(
+        "linux_amd64_gnu_ssl3",
+        "linux_arm64_gnu_ssl3",   // sostituisci con linux_arm64_gnu_ssl1 se il Pi ha OpenSSL 1.1
+        "macos_arm64",
+        "windows_amd64",
+    ).forEach { classifier ->
+        implementation("it.tdlight:tdlight-natives") {
+            artifact { this.classifier = classifier }
+        }
     }
 }
 

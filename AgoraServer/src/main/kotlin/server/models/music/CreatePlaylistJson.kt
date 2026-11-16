@@ -1,4 +1,8 @@
 package server.models.music
 
-class CreatePlaylistJson {
-}
+import kotlinx.serialization.Serializable
+
+@Serializable
+class CreatePlaylistJson(
+    val title: String
+)

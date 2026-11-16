@@ -1,4 +1,5 @@
 import { useMusic } from '../context/musicContext';
+import { CloseIcon, PlayIcon } from './Icons';
 
 const formatDuration = (seconds: number) => {
   const m = Math.floor(seconds / 60);
@@ -29,7 +30,7 @@ export const QueuePanel = ({ className, onClear }: { className: string; onClear:
               onClick={() => jumpTo(i)}
               className="flex min-w-0 flex-1 items-center gap-2 text-left transition-colors hover:text-accent"
             >
-              <span className="w-4 shrink-0 text-center text-xs text-text-muted">{i === index ? '▶' : i + 1}</span>
+              <span className="w-4 shrink-0 text-center text-xs text-text-muted">{i === index ? <PlayIcon className="mx-auto h-3 w-3 text-accent" /> : i + 1}</span>
               <span className="min-w-0">
                 <span className="block truncate text-sm text-text">{item.song.title}</span>
                 <span className="block truncate text-xs text-text-muted">{item.song.author}</span>
@@ -41,7 +42,7 @@ export const QueuePanel = ({ className, onClear }: { className: string; onClear:
               aria-label={`Rimuovi ${item.song.title} dalla coda`}
               className="-m-2 shrink-0 p-2 text-xs text-text-muted transition-colors hover:text-red-400"
             >
-              ✕
+              <CloseIcon className="h-3.5 w-3.5" />
             </button>
           </li>
         ))}

@@ -1,3 +1,16 @@
+# Agorà web-app
+
+## Configurazione
+
+Il frontend chiama direttamente il backend (nessun proxy). L'URL si imposta con `VITE_API_URL`
+(vedi `.env.example`; in locale usa `.env.local`). Se la web-app è servita in HTTPS (es. Render),
+anche il backend deve essere in HTTPS e il server deve abilitare CORS per l'origine della web-app.
+
+Deploy su Render: `render.yaml` nella root del repository (static site con fallback SPA);
+imposta `VITE_API_URL` nel dashboard.
+
+---
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

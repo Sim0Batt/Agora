@@ -1,15 +1,17 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import type { Song } from '../types/models';
-import { MusicContext, type QueueItem } from './musicContext';
+import { MusicContext, type QueueItem, type RepeatMode } from './musicContext';
 
 interface State {
   items: QueueItem[]; // ordine di riproduzione
   original: QueueItem[]; // ordine senza shuffle, per ripristinarlo
   index: number;
   shuffle: boolean;
+  repeat: RepeatMode;
+  hidden: boolean;
 }
 
-const EMPTY: State = { items: [], original: [], index: 0, shuffle: false };
+const EMPTY: State = { items: [], original: [], index: 0, shuffle: false, repeat: 'off', hidden: false };
 
 let nextUid = 0;
 const wrap = (song: Song): QueueItem => ({ uid: ++nextUid, song });
@@ -39,8 +41,8 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
       const start = Math.min(Math.max(index, 0), songs.length - 1);
       const original = songs.map(wrap);
       return shuffle
-        ? { items: shuffleAround(original, start), original, index: 0, shuffle }
-        : { items: original, original, index: start, shuffle };
+        ? { ...prev, items: shuffleAround(original, start), original, index: 0, shuffle, hidden: false }
+        : { ...prev, items: original, original, index: start, shuffle, hidden: false };
     });
   }, []);
 
@@ -79,7 +81,10 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const next = useCallback(() => {
-    setState((prev) => (prev.index < prev.items.length - 1 ? { ...prev, index: prev.index + 1 } : prev));
+    setState((prev) => {
+      if (prev.index < prev.items.length - 1) return { ...prev, index: prev.index + 1 };
+      return prev.repeat === 'all' && prev.items.length > 1 ? { ...prev, index: 0 } : prev;
+    });
   }, []);
 
   const prev = useCallback(() => {
@@ -91,7 +96,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
       const target = prev.items[index];
       if (!target) return prev;
       const items = prev.items.filter((_, i) => i !== index);
-      if (items.length === 0) return { ...EMPTY, shuffle: prev.shuffle };
+      if (items.length === 0) return { ...EMPTY, shuffle: prev.shuffle, repeat: prev.repeat };
       const original = prev.original.filter((it) => it.uid !== target.uid);
       const nextIndex = index < prev.index ? prev.index - 1 : Math.min(prev.index, items.length - 1);
       return { ...prev, items, original, index: nextIndex };
@@ -110,13 +115,25 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
-  const close = useCallback(() => setState((prev) => ({ ...EMPTY, shuffle: prev.shuffle })), []);
+  const cycleRepeat = useCallback(() => {
+    const order: RepeatMode[] = ['off', 'all', 'one'];
+    setState((prev) => ({ ...prev, repeat: order[(order.indexOf(prev.repeat) + 1) % order.length] }));
+  }, []);
+
+  const setHidden = useCallback((hidden: boolean) => setState((prev) => ({ ...prev, hidden })), []);
+
+  const close = useCallback(
+    () => setState((prev) => ({ ...EMPTY, shuffle: prev.shuffle, repeat: prev.repeat })),
+    [],
+  );
 
   const value = useMemo(
     () => ({
       queue: state.items,
       index: state.index,
       shuffle: state.shuffle,
+      repeat: state.repeat,
+      hidden: state.hidden,
       play,
       enqueue,
       playNext,
@@ -125,9 +142,11 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
       prev,
       removeAt,
       toggleShuffle,
+      cycleRepeat,
+      setHidden,
       close,
     }),
-    [state, play, enqueue, playNext, jumpTo, next, prev, removeAt, toggleShuffle, close],
+    [state, play, enqueue, playNext, jumpTo, next, prev, removeAt, toggleShuffle, cycleRepeat, setHidden, close],
   );
 
   return <MusicContext.Provider value={value}>{children}</MusicContext.Provider>;

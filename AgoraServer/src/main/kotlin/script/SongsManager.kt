@@ -2,6 +2,7 @@ package script
 
 import database.tables.SongsTable
 import io.ktor.util.debug.useContextElementInDebugMode
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -10,7 +11,8 @@ import server.models.music.SongJson
 import java.util.UUID
 
 class SongsManager(val connection: Database) {
-    fun saveSong(title: String, author: String, duration: Int, path: String){
+    fun saveSong(title: String, author: String, duration: Int, path: String): String {
+        val songId = UUID.randomUUID().toString()
         try{
             transaction(connection) {
                 SongsTable.insert {
@@ -18,9 +20,10 @@ class SongsManager(val connection: Database) {
                     it[SongsTable.author] = author
                     it[SongsTable.duration] = duration
                     it[SongsTable.path] = path
-                    it[SongsTable.id] = UUID.randomUUID().toString()
+                    it[SongsTable.id] = songId
                 }
             }
+            return songId
         }catch (e: Exception){
             throw Exception("Error during song save ${e.message}: ${e.stackTraceToString()}")
         }
@@ -41,6 +44,14 @@ class SongsManager(val connection: Database) {
             return songsList
         }catch (e: Exception){
             throw Exception("Error retrieving songs ${e.message}: ${e.stackTraceToString()}")
+        }
+    }
+
+    fun getSongPath(id: String): String{
+        return transaction(connection){
+            SongsTable.selectAll().where { SongsTable.id eq id }.first().let {
+                it[SongsTable.path]
+            }
         }
     }
 }

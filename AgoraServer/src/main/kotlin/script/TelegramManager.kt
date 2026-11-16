@@ -33,7 +33,7 @@ data class SearchItem(val index: Int, val title: String)
 @Serializable
 data class SearchResult(val messageId: Long, val items: List<SearchItem>)
 @Serializable
-data class PickedTrack(val path: String, val title: String, val artist: String, val duration: Int)
+data class PickedTrack(val id: String, val path: String, val title: String, val artist: String, val duration: Int)
 
 class TelegramManager(
     private val cfg: TelegramConfiguration,
@@ -119,11 +119,9 @@ class TelegramManager(
         }
         val file = client.send(TdApi.DownloadFile(audio.fileId, 32, 0, 0, true)).await()
 
-        transaction(connection){
-            songsManager.saveSong(audio.title, audio.artist, audio.duration, file.local.path)
-        }
+        val songId = songsManager.saveSong(audio.title, audio.artist, audio.duration, file.local.path)
 
-        PickedTrack(file.local.path, audio.title, audio.artist, audio.duration)
+        PickedTrack(songId, file.local.path, audio.title, audio.artist, audio.duration)
     }
 
     // ---------- interni ----------

@@ -6,10 +6,15 @@ export interface QueueItem {
   song: Song;
 }
 
+export type RepeatMode = 'off' | 'all' | 'one';
+
 export interface MusicContextValue {
   queue: QueueItem[];
   index: number;
   shuffle: boolean;
+  repeat: RepeatMode;
+  /** Player nascosto (la riproduzione continua). */
+  hidden: boolean;
   /** Sostituisce la coda. `shuffle` assente = mantiene la modalità corrente. */
   play: (songs: Song[], index?: number, shuffle?: boolean) => void;
   enqueue: (songs: Song[]) => void;
@@ -19,6 +24,8 @@ export interface MusicContextValue {
   prev: () => void;
   removeAt: (index: number) => void;
   toggleShuffle: () => void;
+  cycleRepeat: () => void;
+  setHidden: (hidden: boolean) => void;
   close: () => void;
 }
 

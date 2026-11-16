@@ -3,16 +3,23 @@ package server
 
 import configuration.ReadXMLConfiguration
 import database.QueryManager
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.application.install
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.autohead.AutoHeadResponse
 import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.plugins.partialcontent.PartialContent
 import io.ktor.server.request.receive
 import io.ktor.server.request.receiveText
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
 import it.tdlight.client.InputParameter
@@ -20,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.jdbc.Database
 import script.LatexManager
+import script.PlaylistManager
 import script.SongsManager
 import script.TelegramManager
 import script.TodoManager
@@ -31,6 +39,8 @@ import server.models.music.MusicSearchJson
 import server.models.notes.SaveNoteJson
 import server.models.TodoJson
 import server.models.misc.UserJson
+import server.models.music.CreatePlaylistJson
+import java.io.File
 
 
 val configuration = ReadXMLConfiguration.getConfiguration()
@@ -39,6 +49,15 @@ fun Application.module() {
     install(ContentNegotiation) {
         json(Json { ignoreUnknownKeys = true })
     }
+    install(CORS) {
+        allowHost("agora-5hgp.onrender.com", schemes = listOf("https"))
+        allowHost("localhost:5173", schemes = listOf("http"))
+        allowMethod(io.ktor.http.HttpMethod.Put)
+        allowMethod(io.ktor.http.HttpMethod.Delete)
+        allowHeader(HttpHeaders.ContentType)
+    }
+    install(PartialContent)
+    install(AutoHeadResponse)
 
 
     val connection = Database.connect(
@@ -49,10 +68,10 @@ fun Application.module() {
     )
 
     val queryManager = QueryManager(connection)
-    val latexManager = LatexManager(connection)
     val todoManager = TodoManager(connection)
     val songsManager = SongsManager(connection)
     val tg = TelegramManager(configuration.telegram!!, connection, songsManager)
+    val playlistManager = PlaylistManager(connection)
 
 
     tg.start()
@@ -250,6 +269,91 @@ fun Application.module() {
                 println(e.message)
                 call.respond(HttpStatusCode.InternalServerError)
             }
+        }
+
+        post("/playlist"){
+            try {
+                val input = call.receive<CreatePlaylistJson>()
+                playlistManager.createPlaylist(input.title)
+                call.respond("OK")
+            }catch (e: Exception){
+                println(e.message)
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
+
+        get("/playlist"){
+            call.respond(playlistManager.getPlaylists())
+        }
+
+        post("/playlist/add/{playlistId}/{songId}"){
+            try {
+                val playlistId = call.parameters["playlistId"]!!
+                val songId = call.parameters["songId"]!!
+                playlistManager.addSong(playlistId, songId)
+                call.respond("OK")
+            }catch (e: Exception){
+                println(e.message)
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
+
+        get("/playlist/song/{playlistId}"){
+            try {
+                val playlistId = call.parameters["playlistId"]!!
+                call.respond(playlistManager.getSongsForPlaylist(playlistId))
+            }catch (e: Exception){
+                println(e.message)
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
+
+        delete("/playlist/{playlistId}"){
+            try {
+                val playlistId = call.parameters["playlistId"]!!
+                playlistManager.removePlaylist(playlistId)
+                call.respond("OK")
+            }catch (e: Exception){
+                println(e.message)
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
+
+        delete("/playlist/{playlistId}/{songId}"){
+            try {
+                val playlistId = call.parameters["playlistId"]!!
+                val songId = call.parameters["songId"]!!
+                playlistManager.removeSongFromPlaylist(songId, playlistId)
+                call.respond("OK")
+            }catch (e: Exception){
+                println(e.message)
+                call.respond(HttpStatusCode.InternalServerError)
+            }
+        }
+
+
+        get("/songs/{id}/stream") {
+            val id = call.parameters["id"]!!
+            val path = songsManager.getSongPath(id)
+            val file = path?.let { File(it) }
+
+            if (file == null || !file.isFile) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+
+            val contentType = when (file.extension.lowercase()) {
+                "mp3" -> ContentType.Audio.MPEG
+                "ogg", "opus" -> ContentType.Audio.OGG
+                "flac" -> ContentType("audio", "flac")
+                "m4a", "aac" -> ContentType("audio", "mp4")
+                "wav" -> ContentType("audio", "wav")
+                else -> ContentType.Application.OctetStream
+            }
+
+            call.response.header(HttpHeaders.AcceptRanges, "bytes")
+            call.response.header(HttpHeaders.CacheControl, "private, max-age=3600")
+            call.respondFile(file)  // con PartialContent gestisce Range, 206 e Content-Length
         }
 
     }

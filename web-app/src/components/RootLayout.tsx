@@ -6,9 +6,9 @@ const COMPACT_ROUTES = ['/notes/editor', '/latex/editor', '/notes/copy-to-latex'
 
 export const RootLayout = () => {
   const { pathname } = useLocation();
-  const { queue } = useMusic();
+  const { queue, hidden } = useMusic();
   const compact = COMPACT_ROUTES.some((route) => pathname.startsWith(route));
-  const showFullBar = queue.length > 0 && !compact;
+  const showFullBar = queue.length > 0 && !compact && !hidden;
 
   return (
     <>
