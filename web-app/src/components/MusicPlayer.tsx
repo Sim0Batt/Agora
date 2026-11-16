@@ -141,17 +141,12 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
     ms.setActionHandler('pause', () => player.pause());
     ms.setActionHandler('previoustrack', hasPrev ? goPrev : null);
     ms.setActionHandler('nexttrack', hasNext ? goNext : null);
+    // Niente seekbackward/seekforward: su iOS sostituirebbero i tasti precedente/successivo
     ms.setActionHandler('seekto', (d) => {
       if (d.seekTime != null) player.currentTime = d.seekTime;
     });
-    ms.setActionHandler('seekbackward', (d) => {
-      player.currentTime = Math.max(0, player.currentTime - (d.seekOffset ?? 10));
-    });
-    ms.setActionHandler('seekforward', (d) => {
-      player.currentTime = Math.min(player.duration || Infinity, player.currentTime + (d.seekOffset ?? 10));
-    });
     return () => {
-      for (const a of ['play', 'pause', 'previoustrack', 'nexttrack', 'seekto', 'seekbackward', 'seekforward'] as const) {
+      for (const a of ['play', 'pause', 'previoustrack', 'nexttrack', 'seekto'] as const) {
         ms.setActionHandler(a, null);
       }
     };
