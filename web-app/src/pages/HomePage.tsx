@@ -75,7 +75,7 @@ export const HomePage = () => {
       <DashBoard />
 
 
-      <main className="mx-auto max-w-6xl px-4 py-10 space-y-10">
+      <main className="mx-auto max-w-6xl space-y-8 px-4 py-6 sm:space-y-10 sm:py-10">
         <section>
           <h1 className="text-3xl font-bold text-text">Benvenuto in Agorà</h1>
           <p className="mt-1 text-text-muted">Seleziona una sezione o consulta i widget qui sotto.</p>
@@ -105,7 +105,7 @@ export const HomePage = () => {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 
             <div className="flex flex-col justify-center rounded-lg border border-border bg-surface-alt p-6">
-              <p className="text-4xl font-mono font-bold text-text tabular-nums">{timeStr}</p>
+              <p className="text-3xl font-mono font-bold sm:text-4xl text-text tabular-nums">{timeStr}</p>
               <p className="mt-1 capitalize text-sm text-text-muted">{dateStr}</p>
             </div>
 
@@ -114,7 +114,7 @@ export const HomePage = () => {
                 <p className="font-semibold text-text">Note recenti</p>
                 <button
                   onClick={() => navigate('/latex')}
-                  className="text-xs text-accent hover:text-accent-hover transition-colors"
+                  className="-my-2 py-2 text-xs text-accent hover:text-accent-hover transition-colors"
                 >
                   Vedi tutte →
                 </button>

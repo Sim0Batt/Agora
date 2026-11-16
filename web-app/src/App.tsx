@@ -6,40 +6,51 @@ import { NotesPage } from './pages/NotesPage';
 import NoteEditor from './pages/NoteEditor';
 import CopyNoteToLatex from './pages/CopyNoteToLatex';
 import { MusicPage } from './pages/MusicPage';
+import { RootLayout } from './components/RootLayout';
+import { MusicProvider } from './context/MusicProvider';
 
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: <HomePage />,
-  },
-  {
-    path: '/latex',
-    element: <LatexNotes />,
-  },
-  {
-    path: '/latex/editor/:id',
-    element: <LatexEditor />,
-  },
-  {
-    path: '/notes',
-    element: <NotesPage />,
-  },
-  {
-    path: '/notes/editor/:id',
-    element: <NoteEditor />,
-  },
-  {
-    path: '/notes/copy-to-latex',
-    element: <CopyNoteToLatex />,
-  },
-  {
-    path: '/music',
-    element: <MusicPage />,
+    element: <RootLayout />,
+    children: [
+      {
+        path: '/',
+        element: <HomePage />,
+      },
+      {
+        path: '/latex',
+        element: <LatexNotes />,
+      },
+      {
+        path: '/latex/editor/:id',
+        element: <LatexEditor />,
+      },
+      {
+        path: '/notes',
+        element: <NotesPage />,
+      },
+      {
+        path: '/notes/editor/:id',
+        element: <NoteEditor />,
+      },
+      {
+        path: '/notes/copy-to-latex',
+        element: <CopyNoteToLatex />,
+      },
+      {
+        path: '/music',
+        element: <MusicPage />,
+      },
+    ],
   },
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <MusicProvider>
+      <RouterProvider router={router} />
+    </MusicProvider>
+  );
 }
 
 export default App;

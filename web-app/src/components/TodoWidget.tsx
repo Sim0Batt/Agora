@@ -112,7 +112,7 @@ export const TodoWidget = () => {
       <button
         type="button"
         onClick={() => setShowForm(true)}
-        className="mb-4 w-full rounded-md border border-dashed border-border px-3 py-2 text-sm font-medium text-text transition-colors hover:border-accent"
+        className="mb-4 min-h-11 w-full rounded-md border border-dashed border-border px-3 py-2 text-sm font-medium text-text transition-colors hover:border-accent"
       >
         + Aggiungi todo
       </button>
@@ -123,7 +123,7 @@ export const TodoWidget = () => {
             key={f}
             type="button"
             onClick={() => setFilter(f)}
-            className={`rounded-full border px-3 py-1 text-xs transition-colors ${
+            className={`rounded-full border px-3 py-1.5 text-xs transition-colors sm:py-1 ${
               filter === f ? 'border-accent bg-accent/15 text-text' : 'border-border text-text-muted hover:border-accent'
             }`}
           >
@@ -133,10 +133,13 @@ export const TodoWidget = () => {
       </div>
 
       {showForm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          onClick={closeForm}
-        >
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60">
+          <div
+            className="flex min-h-full items-center justify-center p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) closeForm();
+            }}
+          >
           <form
             onSubmit={submit}
             onClick={(e) => e.stopPropagation()}
@@ -203,6 +206,7 @@ export const TodoWidget = () => {
               </button>
             </div>
           </form>
+          </div>
         </div>
       )}
 
@@ -231,7 +235,7 @@ export const TodoWidget = () => {
                       onClick={() => remove(t.id)}
                       title="Elimina"
                       aria-label="Elimina todo"
-                      className="text-text-muted transition-colors hover:text-red-400"
+                      className="-m-2 p-2 text-text-muted transition-colors hover:text-red-400"
                     >
                       🗑
                     </button>

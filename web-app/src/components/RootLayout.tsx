@@ -1,0 +1,21 @@
+import { Outlet, useLocation } from 'react-router-dom';
+import { MusicPlayer } from './MusicPlayer';
+import { useMusic } from '../context/musicContext';
+
+const COMPACT_ROUTES = ['/notes/editor', '/latex/editor', '/notes/copy-to-latex'];
+
+export const RootLayout = () => {
+  const { pathname } = useLocation();
+  const { queue } = useMusic();
+  const compact = COMPACT_ROUTES.some((route) => pathname.startsWith(route));
+  const showFullBar = queue.length > 0 && !compact;
+
+  return (
+    <>
+      <div className={showFullBar ? 'pb-56 sm:pb-28' : ''}>
+        <Outlet />
+      </div>
+      <MusicPlayer compact={compact} />
+    </>
+  );
+};

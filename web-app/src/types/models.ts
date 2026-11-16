@@ -78,6 +78,7 @@ export interface SearchResult {
 }
 
 export interface PickedTrack {
+  id: string;
   path: string;
   title: string;
   artist: string;
@@ -89,4 +90,10 @@ export interface Song {
   title: string;
   author: string;
   duration: number;
+}
+
+export interface Playlist {
+  id: string;
+  title: string;
+  count: number;
 }

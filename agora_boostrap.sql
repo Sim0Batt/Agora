@@ -45,3 +45,25 @@ CREATE TABLE Todos(
   type VARCHAR(20) NOT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB;
+
+CREATE TABLE songs (
+  id VARCHAR(36) NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  author VARCHAR(100) NOT NULL,
+  duration INT NOT NULL,
+  path VARCHAR(255) NOT NULL,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB;
+
+CREATE TABLE playlists (
+  id VARCHAR(36) NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  count INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB;
+
+CREATE TABLE playlist_songs (
+  song_id VARCHAR(36) NOT NULL,
+  playlist_id VARCHAR(36) NOT NULL,
+  PRIMARY KEY (song_id, playlist_id)
+) ENGINE=InnoDB;
