@@ -65,20 +65,21 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
   const song = item?.song;
   const hasPrev = index > 0;
   const nextItem = queue[index + 1] ?? (repeat === 'all' && queue.length > 1 ? queue[0] : undefined);
-  const prevItem = queue[index - 1];
   const hasNext = !!nextItem;
   const error = failedUid === item?.uid;
 
   // Il brano va caricato in modo sincrono dentro il gesto dell'utente (o del tasto di sistema),
   // poi si aggiorna lo stato React.
+  // L'elemento da caricare lo decide il provider (stato sincrono), non il render corrente: con
+  // l'app in background i render possono arrivare in ritardo e gli skip veloci userebbero dati vecchi.
   const goNext = useCallback(() => {
-    if (nextItem) loadItem(nextItem);
-    next();
-  }, [nextItem, next]);
+    const target = next();
+    if (target) loadItem(target);
+  }, [next]);
   const goPrev = useCallback(() => {
-    if (prevItem) loadItem(prevItem);
-    prev();
-  }, [prevItem, prev]);
+    const target = prev();
+    if (target) loadItem(target);
+  }, [prev]);
 
   // Allinea l'audio alla coda (play(), jumpTo, rimozioni...). Se è già caricato non fa nulla.
   useEffect(() => {
@@ -109,7 +110,7 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
       if (repeat === 'one' || (repeat === 'all' && queue.length === 1)) {
         player.currentTime = 0;
         void player.play();
-      } else if (hasNext) {
+      } else {
         goNext();
       }
     };
@@ -127,7 +128,7 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
       player.removeEventListener('error', onError);
       player.removeEventListener('ended', onEnded);
     };
-  }, [repeat, queue.length, hasNext, goNext]);
+  }, [repeat, queue.length, goNext]);
 
   useEffect(() => {
     if (!song || !('mediaSession' in navigator)) return;
@@ -139,8 +140,8 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
     const ms = navigator.mediaSession;
     ms.setActionHandler('play', () => void player.play());
     ms.setActionHandler('pause', () => player.pause());
-    ms.setActionHandler('previoustrack', hasPrev ? goPrev : null);
-    ms.setActionHandler('nexttrack', hasNext ? goNext : null);
+    ms.setActionHandler('previoustrack', goPrev);
+    ms.setActionHandler('nexttrack', goNext);
     // Niente seekbackward/seekforward: su iOS sostituirebbero i tasti precedente/successivo
     ms.setActionHandler('seekto', (d) => {
       if (d.seekTime != null) player.currentTime = d.seekTime;
@@ -150,7 +151,7 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
         ms.setActionHandler(a, null);
       }
     };
-  }, [song, hasPrev, hasNext, goPrev, goNext]);
+  }, [song, goPrev, goNext]);
 
   if (!song) return null;
 

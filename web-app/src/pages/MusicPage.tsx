@@ -356,18 +356,11 @@ export const MusicPage = () => {
                       </button>
                       <div className="flex flex-wrap items-center gap-2 px-4 pb-3 sm:pb-0 sm:pl-0">
                         <button
-                          onClick={() => withPlaylistSongs(playlist, (songs) => play(songs, 0, false))}
-                          aria-label={`Riproduci ${playlist.title}`}
-                          className={smallBtn}
-                        >
-                          <PlayIcon className="h-3.5 w-3.5" /> Riproduci
-                        </button>
-                        <button
                           onClick={() => withPlaylistSongs(playlist, (songs) => play(songs, 0, true))}
                           aria-label={`Riproduci ${playlist.title} in ordine casuale`}
                           className={smallBtn}
                         >
-                          <ShuffleIcon className="h-3.5 w-3.5" />
+                          <PlayIcon className="h-3.5 w-3.5" /> Riproduci
                         </button>
                         <button
                           onClick={() => withPlaylistSongs(playlist, enqueue)}

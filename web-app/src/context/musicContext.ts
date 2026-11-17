@@ -20,8 +20,8 @@ export interface MusicContextValue {
   enqueue: (songs: Song[]) => void;
   playNext: (songs: Song[]) => void;
   jumpTo: (index: number) => void;
-  next: () => void;
-  prev: () => void;
+  next: () => QueueItem | undefined;
+  prev: () => QueueItem | undefined;
   removeAt: (index: number) => void;
   toggleShuffle: () => void;
   cycleRepeat: () => void;

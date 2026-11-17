@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useSyncExternalStore, type ReactNode } from 'react';
 import type { Song } from '../types/models';
 import { MusicContext, type QueueItem, type RepeatMode } from './musicContext';
 
@@ -31,11 +31,26 @@ const shuffleAround = (list: QueueItem[], first: number): QueueItem[] => [
   ...shuffled(list.filter((_, i) => i !== first)),
 ];
 
+
+// Lo stato vive fuori da React e si aggiorna in modo sincrono: con l'app in background iOS può
+// ritardare i render, e più skip ravvicinati leggerebbero una coda obsoleta.
+let current: State = EMPTY;
+const listeners = new Set<() => void>();
+const getState = () => current;
+const subscribe = (listener: () => void) => {
+  listeners.add(listener);
+  return () => void listeners.delete(listener);
+};
+const update = (fn: (prev: State) => State) => {
+  current = fn(current);
+  listeners.forEach((l) => l());
+};
+
 export const MusicProvider = ({ children }: { children: ReactNode }) => {
-  const [state, setState] = useState<State>(EMPTY);
+  const state = useSyncExternalStore(subscribe, getState);
 
   const play = useCallback((songs: Song[], index = 0, shuffleOverride?: boolean) => {
-    setState((prev) => {
+    update((prev) => {
       if (songs.length === 0) return prev;
       const shuffle = shuffleOverride ?? prev.shuffle;
       const start = Math.min(Math.max(index, 0), songs.length - 1);
@@ -49,7 +64,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
   const enqueue = useCallback(
     (songs: Song[]) => {
       if (songs.length === 0) return;
-      setState((prev) => {
+      update((prev) => {
         if (prev.items.length === 0) {
           const original = songs.map(wrap);
           return { ...prev, items: original, original, index: 0 };
@@ -63,7 +78,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
 
   const playNext = useCallback((songs: Song[]) => {
     if (songs.length === 0) return;
-    setState((prev) => {
+    update((prev) => {
       const added = songs.map(wrap);
       if (prev.items.length === 0) return { ...prev, items: added, original: added, index: 0 };
       const items = [...prev.items.slice(0, prev.index + 1), ...added, ...prev.items.slice(prev.index + 1)];
@@ -75,24 +90,27 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const jumpTo = useCallback((index: number) => {
-    setState((prev) =>
+    update((prev) =>
       index < 0 || index >= prev.items.length ? prev : { ...prev, index },
     );
   }, []);
 
+  // Restituiscono il brano corrente dopo lo spostamento, così il player può caricarlo subito.
   const next = useCallback(() => {
-    setState((prev) => {
+    update((prev) => {
       if (prev.index < prev.items.length - 1) return { ...prev, index: prev.index + 1 };
       return prev.repeat === 'all' && prev.items.length > 1 ? { ...prev, index: 0 } : prev;
     });
+    return getState().items[getState().index];
   }, []);
 
   const prev = useCallback(() => {
-    setState((p) => (p.index > 0 ? { ...p, index: p.index - 1 } : p));
+    update((p) => (p.index > 0 ? { ...p, index: p.index - 1 } : p));
+    return getState().items[getState().index];
   }, []);
 
   const removeAt = useCallback((index: number) => {
-    setState((prev) => {
+    update((prev) => {
       const target = prev.items[index];
       if (!target) return prev;
       const items = prev.items.filter((_, i) => i !== index);
@@ -104,7 +122,7 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const toggleShuffle = useCallback(() => {
-    setState((prev) => {
+    update((prev) => {
       if (prev.items.length === 0) return { ...prev, shuffle: !prev.shuffle };
       if (!prev.shuffle) {
         return { ...prev, shuffle: true, items: shuffleAround(prev.items, prev.index), index: 0 };
@@ -117,13 +135,13 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
 
   const cycleRepeat = useCallback(() => {
     const order: RepeatMode[] = ['off', 'all', 'one'];
-    setState((prev) => ({ ...prev, repeat: order[(order.indexOf(prev.repeat) + 1) % order.length] }));
+    update((prev) => ({ ...prev, repeat: order[(order.indexOf(prev.repeat) + 1) % order.length] }));
   }, []);
 
-  const setHidden = useCallback((hidden: boolean) => setState((prev) => ({ ...prev, hidden })), []);
+  const setHidden = useCallback((hidden: boolean) => update((prev) => ({ ...prev, hidden })), []);
 
   const close = useCallback(
-    () => setState((prev) => ({ ...EMPTY, shuffle: prev.shuffle, repeat: prev.repeat })),
+    () => update((prev) => ({ ...EMPTY, shuffle: prev.shuffle, repeat: prev.repeat })),
     [],
   );
 
