@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
+import { latexApi } from '../api/latex';
 
 interface NoteRecord {
     id: number;
@@ -11,6 +12,7 @@ interface NoteRecord {
 export const LatexNotesScrollableList = () => {
     const [notes, setNotes] = useState<NoteRecord[]>([]);
     const [titleSearch, setTitleSearch] = useState('');
+    const [downloadingId, setDownloadingId] = useState<number | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -33,6 +35,26 @@ export const LatexNotesScrollableList = () => {
             record.title.toUpperCase().includes(q)
         );
     }, [notes, titleSearch]);
+
+    const handleDownload = async (e: MouseEvent, record: NoteRecord) => {
+        e.stopPropagation();
+        setDownloadingId(record.id);
+        try {
+            const pdfBlob = await latexApi.downloadPdf(record.id);
+            const fileUrl = URL.createObjectURL(pdfBlob);
+            const anchor = document.createElement('a');
+            anchor.href = fileUrl;
+            anchor.download = `${(record.title || `latex-${record.id}`).replace(/[^a-z0-9-_]+/gi, '_')}.pdf`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            anchor.remove();
+            window.setTimeout(() => URL.revokeObjectURL(fileUrl), 1000);
+        } catch {
+            alert('Errore durante il download del PDF.');
+        } finally {
+            setDownloadingId(null);
+        }
+    };
 
     const typeColor: Record<string, string> = {
         University: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
@@ -77,7 +99,14 @@ export const LatexNotesScrollableList = () => {
                                     </span>
                                 )}
                             </div>
-                            <div className="mt-auto flex justify-end">
+                            <div className="mt-auto flex items-center justify-between">
+                                <button
+                                    onClick={(e) => handleDownload(e, record)}
+                                    disabled={downloadingId === record.id}
+                                    className="px-3 py-1 text-xs font-medium rounded border border-border hover:bg-surface transition-colors cursor-pointer disabled:opacity-50"
+                                >
+                                    {downloadingId === record.id ? 'Download…' : 'Scarica PDF'}
+                                </button>
                                 <span className="text-xs text-text-muted group-hover:text-accent transition-colors">
                                     Apri →
                                 </span>
