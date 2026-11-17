@@ -15,7 +15,7 @@ export const LatexNotesScrollableList = () => {
 
     useEffect(() => {
         const fetchNotes = async () => {
-            const response = await apiClient.get('/latex/list/1');
+            const response = await apiClient.get('/latex/list');
             const formattedData: NoteRecord[] = response.data.map((item: { id: string; title: string; type: string }) => ({
                 id: Number(item.id),
                 title: item.title,

@@ -27,14 +27,12 @@ import script.DytManager
 import script.PlaylistManager
 import script.SongsManager
 import script.TodoManager
-import server.models.misc.AccountJson
 import server.models.notes.ContentJson
 import server.models.notes.CreateNoteJson
 import server.models.latexnotes.LatexNoteJson
 import server.models.music.MusicSearchJson
 import server.models.notes.SaveNoteJson
 import server.models.TodoJson
-import server.models.misc.UserJson
 import server.models.music.CreatePlaylistJson
 import server.models.music.DownloadSongJson
 import server.models.music.SongJson
@@ -71,32 +69,38 @@ fun Application.module() {
     val playlistManager = PlaylistManager(connection)
     val dytManager = DytManager(configuration.music!!.ydtEnginePath, configuration.music!!.saveFolder)
 
+    var display = false
+
 
     routing {
-        //Users Management
-        get("/user") {
-            call.respondText(queryManager.getUsers().joinToString(";\n"))
-        }
-        post("/user") {
-            val credentials = call.receive<UserJson>()
-            queryManager.createUser(credentials.name, credentials.password)
-            call.respondText("User created")
+        get("/status"){
+            call.respond("OK")
         }
 
-        post("/login") {
-            val credentials = call.receive<UserJson>()
-            val account = queryManager.loginUser(credentials)
-            if(account == AccountJson("null", -1)){
-                call.respondText("failure")
+        get("/display"){
+            if(display){
+                val process = ProcessBuilder("sudo", "-n", "systemctl", "restart", "display.service")
+                    .redirectErrorStream(true)
+                    .start()
+                val output = process.inputStream.bufferedReader().readText()
+                val exitCode = process.waitFor()
+                if (exitCode != 0) {
+                    println("Display restart failed: $output")
+                }
+                display = !display
+                call.respondText(if (display) "OFF" else "ON")
             }else{
-                call.respondText(account.toString())
+                val process = ProcessBuilder("sudo", "-n", "systemctl", "stop", "display.service")
+                    .redirectErrorStream(true)
+                    .start()
+                val output = process.inputStream.bufferedReader().readText()
+                val exitCode = process.waitFor()
+                if (exitCode != 0) {
+                    println("Display stop failed: $output")
+                }
+                display = !display
+                call.respondText(if (display) "OFF" else "ON")
             }
-        }
-
-        get("/user/{id}") {
-            val id = call.parameters["id"]?.toIntOrNull() ?: -1
-            val account = queryManager.getSpecificUser(id)
-            call.respondText(account.toString())
         }
 
 
@@ -104,12 +108,6 @@ fun Application.module() {
         get("/note") {
             val result = queryManager.getNotes().joinToString(";\n")
             println(result)
-            call.respondText(result)
-        }
-
-        get("/note/{id}") {
-            val userId = call.parameters["id"].toString().toInt()
-            val result = queryManager.getUserNotes(userId).joinToString(";\n")
             call.respondText(result)
         }
 
@@ -152,10 +150,9 @@ fun Application.module() {
             }
         }
 
-        get("/latex/list/{userId}"){
-            val userId = call.parameters["userId"]?.toIntOrNull() ?: -1
+        get("/latex/list"){
             try {
-                val result = queryManager.getLatexNotesTitles(userId)
+                val result = queryManager.getLatexNotesTitles()
                 println(result)
                 call.respond(result)
             }catch (e: Exception){

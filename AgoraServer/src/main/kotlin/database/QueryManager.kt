@@ -2,7 +2,6 @@ package database
 
 import database.tables.LatexNotesTable
 import database.tables.NotesTable
-import database.tables.UsersTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -10,61 +9,14 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
-import server.models.misc.AccountJson
 import server.models.notes.CreateNoteJson
 import server.models.latexnotes.InfoLatexJson
 import server.models.latexnotes.LatexNoteJson
 import server.models.notes.NotesJson
 import server.models.notes.SaveNoteJson
-import server.models.misc.UserJson
 import java.time.LocalDate
 
 class QueryManager(val connection: Database) {
-    fun getUsers(): List<UserJson>{
-        val tmp = mutableListOf<UserJson>()
-        transaction (connection){
-            UsersTable.selectAll().map { user ->
-                tmp.add(UserJson(user[UsersTable.name], user[UsersTable.password]))
-            }
-        }
-        return tmp
-    }
-
-    fun getSpecificUser(id: Int): UserJson{
-        var userJson = UserJson("", "")
-        transaction (connection){
-            userJson = UserJson(
-                UsersTable.selectAll().where { UsersTable.id eq id }.firstOrNull()?.get(UsersTable.name).toString(),
-                UsersTable.selectAll().where { UsersTable.id eq id }.firstOrNull()?.get(UsersTable.password).toString()
-            )
-        }
-        return userJson
-    }
-
-    fun createUser(name: String, password: String){
-        try {
-            transaction (connection){
-                UsersTable.insert {
-                    it[UsersTable.name] = name
-                    it[UsersTable.password] = password
-                }
-            }
-        }catch (e: Exception){
-            println(e.message)
-        }
-    }
-
-    fun loginUser(userJson: UserJson): AccountJson{
-        var account = AccountJson("null", -1)
-        transaction (connection){
-            val user = UsersTable.selectAll().where { UsersTable.name eq userJson.name }.firstOrNull()?.get(UsersTable.name)
-            val id = UsersTable.selectAll().where { UsersTable.name eq userJson.name }.firstOrNull()?.get(UsersTable.id)
-            account = AccountJson(user.toString(), id.toString().toInt())
-        }
-        return account
-    }
-
-
     fun getNotes(): List<NotesJson>{
         val tmp = mutableListOf<NotesJson>()
         transaction (connection){
@@ -75,31 +27,6 @@ class QueryManager(val connection: Database) {
                         note[NotesTable.title],
                         note[NotesTable.type],
                         note[NotesTable.length],
-                        note[NotesTable.userId]
-                    )
-                )
-            }
-        }
-        return tmp
-    }
-
-    fun getUserNotes(userId: Int): List<NotesJson>{
-        val tmp = mutableListOf<NotesJson>()
-        transaction (connection){
-            NotesTable.selectAll().where{
-              NotesTable.userId eq userId
-            }.map { note ->
-                tmp.add(
-                    NotesJson(
-                        note[NotesTable.id].toString().toInt(),
-                        note[NotesTable.title],
-                        note[NotesTable.type],
-                        note[NotesTable.length],
-                        note[NotesTable.userId],
-                        note[NotesTable.content]
-                            .replace("\n", "\\n")
-                            .replace("\"",  "'")
-                            .replace("\\", "\\\\")
                     )
                 )
             }
@@ -119,7 +46,6 @@ class QueryManager(val connection: Database) {
                 it[NotesTable.title] = notesJson.title
                 it[NotesTable.type] = notesJson.type
                 it[NotesTable.length] = notesJson.length
-                it[NotesTable.userId] = notesJson.userId
                 it[NotesTable.content] = ""
             }
         }
@@ -213,7 +139,6 @@ class QueryManager(val connection: Database) {
             return transaction (connection){
                 LatexNotesTable.insert {
                     it[LatexNotesTable.title] = latexNoteJson.title
-                    it[LatexNotesTable.userId] = latexNoteJson.userId
                     it[LatexNotesTable.content] = initialLatex
                     it[LatexNotesTable.type] = latexNoteJson.type
                 }[LatexNotesTable.id].toString().toInt()
@@ -235,14 +160,12 @@ class QueryManager(val connection: Database) {
     }
 
 
-    fun getLatexNotesTitles(userId: Int): List<InfoLatexJson>{
+    fun getLatexNotesTitles(): List<InfoLatexJson>{
         val tmpList = mutableListOf<InfoLatexJson>()
 
         try {
             transaction(connection) {
-                LatexNotesTable.selectAll().where {
-                    LatexNotesTable.userId eq userId
-                }.map {
+                LatexNotesTable.selectAll().map {
                     tmpList.add(InfoLatexJson(it[LatexNotesTable.id].toString().toInt(), it[LatexNotesTable.title], it[LatexNotesTable.type]))
                 }
             }

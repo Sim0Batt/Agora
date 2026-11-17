@@ -17,7 +17,7 @@ class LatexManager(val connection: Database) {
             println("Started .tex file creation")
             val content: String = queryManager.getLatexNoteContent(noteId)
 
-            val noteInfo = queryManager.getLatexNotesTitles(1).filter {
+            val noteInfo = queryManager.getLatexNotesTitles().filter {
                 it.id == noteId
             }[0]
 

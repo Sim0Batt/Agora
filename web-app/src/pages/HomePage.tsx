@@ -50,7 +50,7 @@ export const HomePage = () => {
 
   useEffect(() => {
     apiClient
-      .get('/latex/list/1')
+      .get('/latex/list')
       .then((res) => {
         const data: RecentNote[] = res.data.map((item: { id: string; title: string; type: string }) => ({
           id: Number(item.id),

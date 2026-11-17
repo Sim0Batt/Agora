@@ -116,7 +116,7 @@ export default function CopyNoteToLatex() {
     // ── Fetch lista note LaTeX ──────────────────────────────────────────
     useEffect(() => {
         const fetchLatexNotes = async () => {
-            const response = await apiClient.get('/latex/list/1');
+            const response = await apiClient.get('/latex/list');
             const items: NoteListItem[] = response.data.map((item: { id: string; title: string; type: string }) => ({
                 id: Number(item.id),
                 title: item.title,

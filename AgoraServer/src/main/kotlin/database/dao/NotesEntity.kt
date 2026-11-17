@@ -10,6 +10,5 @@ class NotesEntity (id: EntityID<Int>) : IntEntity(id){
     var title by NotesTable.title
     var type by NotesTable.type
     var length by NotesTable.length
-    var userId by NotesTable.userId
     var content by NotesTable.content
 }

@@ -99,7 +99,7 @@ export default function LatexEditor() {
         const fetchContent = async () => {
             const [contentResponse, notesResponse] = await Promise.all([
                 apiClient.get('/latex/' + id, { responseType: 'text', transformResponse: [(data: string) => data] }),
-                apiClient.get('/latex/list/1'),
+                apiClient.get('/latex/list'),
             ]);
 
             setCode(contentResponse.data);

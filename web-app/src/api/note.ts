@@ -7,15 +7,15 @@ export const noteApi = {
         return response.data;
     },
     getNote: async (id: number): Promise<unknown> => {
-        const response = await apiClient.get(`/note/${id}`);
+        const response = await apiClient.post(`/content/${id}`);
         return response.data;
     },
     updateNote: async (noteId: number, content: string): Promise<unknown> => {
-        const response = await apiClient.post('/note/update', { noteId, content });
+        const response = await apiClient.post('/updateNote', { noteId, content });
         return response.data;
     },
-    listNotes: async (userId: number): Promise<unknown> => {
-        const response = await apiClient.get(`/note/list/${userId}`);
+    listNotes: async (): Promise<unknown> => {
+        const response = await apiClient.get('/note');
         return response.data;
     },
 };
