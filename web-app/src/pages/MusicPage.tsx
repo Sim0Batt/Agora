@@ -356,7 +356,7 @@ export const MusicPage = () => {
                       </button>
                       <div className="flex flex-wrap items-center gap-2 px-4 pb-3 sm:pb-0 sm:pl-0">
                         <button
-                          onClick={() => withPlaylistSongs(playlist, (songs) => play(songs, 0, true))}
+                          onClick={() => withPlaylistSongs(playlist, (songs) => play(songs, Math.floor(Math.random() * songs.length), true))}
                           aria-label={`Riproduci ${playlist.title} in ordine casuale`}
                           className={smallBtn}
                         >

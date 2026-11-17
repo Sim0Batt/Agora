@@ -64,7 +64,7 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
   const item = queue[index];
   const song = item?.song;
   const hasPrev = index > 0;
-  const nextItem = queue[index + 1] ?? (repeat === 'all' && queue.length > 1 ? queue[0] : undefined);
+  const nextItem = queue[index + 1] ?? ((repeat === 'all' || shuffle) && queue.length > 1 ? queue[0] : undefined);
   const hasNext = !!nextItem;
   const error = failedUid === item?.uid;
 
@@ -107,7 +107,7 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
     const onPause = () => setPlaying(false);
     const onError = () => setFailedUid(Number(player.dataset.uid));
     const onEnded = () => {
-      if (repeat === 'one' || (repeat === 'all' && queue.length === 1)) {
+      if (repeat === 'one' || ((repeat === 'all' || shuffle) && queue.length === 1)) {
         player.currentTime = 0;
         void player.play();
       } else {
@@ -128,7 +128,7 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
       player.removeEventListener('error', onError);
       player.removeEventListener('ended', onEnded);
     };
-  }, [repeat, queue.length, goNext]);
+  }, [repeat, shuffle, queue.length, goNext]);
 
   useEffect(() => {
     if (!song || !('mediaSession' in navigator)) return;

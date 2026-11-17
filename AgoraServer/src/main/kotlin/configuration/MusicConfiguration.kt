@@ -3,7 +3,8 @@ package configuration
 import org.simpleframework.xml.Element
 import org.simpleframework.xml.Root
 
-class MusicConfiguration {
+class
+MusicConfiguration {
     @field:Element(name = "YDTEnginePath", required = false)
     var ydtEnginePath: String = ""
 

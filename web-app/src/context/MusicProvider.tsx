@@ -99,6 +99,13 @@ export const MusicProvider = ({ children }: { children: ReactNode }) => {
   const next = useCallback(() => {
     update((prev) => {
       if (prev.index < prev.items.length - 1) return { ...prev, index: prev.index + 1 };
+      if (prev.items.length > 1 && prev.shuffle) {
+        // Fine coda in shuffle: nuovo giro casuale, senza ripetere subito il brano appena finito
+        const last = prev.index;
+        let items = shuffled(prev.items);
+        if (items[0].uid === prev.items[last].uid) items = [...items.slice(1), items[0]];
+        return { ...prev, items, index: 0 };
+      }
       return prev.repeat === 'all' && prev.items.length > 1 ? { ...prev, index: 0 } : prev;
     });
     return getState().items[getState().index];
