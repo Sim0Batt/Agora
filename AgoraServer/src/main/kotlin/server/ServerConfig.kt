@@ -16,6 +16,7 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.plugins.partialcontent.PartialContent
 import io.ktor.server.request.receive
+import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
@@ -24,6 +25,7 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.jdbc.Database
 import script.DytManager
+import script.LatexManager
 import script.PlaylistManager
 import script.SongsManager
 import script.TodoManager
@@ -64,6 +66,7 @@ fun Application.module() {
     )
 
     val queryManager = QueryManager(connection)
+    val latexManager = LatexManager(connection)
     val todoManager = TodoManager(connection)
     val songsManager = SongsManager(connection)
     val playlistManager = PlaylistManager(connection)
@@ -187,6 +190,29 @@ fun Application.module() {
             try{
                 queryManager.updateLatexNote(notesJson)
                 call.respondText("Note updated")
+            }catch (e: Exception){
+                println(e.stackTraceToString())
+                call.respondText("failure")
+            }
+        }
+
+        post("/latex/download/{noteId}"){
+            try{
+                val noteId = call.parameters["noteId"]?.toIntOrNull() ?: -1
+                val filePath = latexManager.saveLatexFile(noteId)
+                val pdf = latexManager.generatePdf(filePath)
+                call.respondFile(pdf)
+            }catch (e: Exception){
+                println(e.stackTraceToString())
+                call.respondText("failure")
+            }
+        }
+
+        post("/latex/image"){
+            try{
+                val multipartData = call.receiveMultipart()
+                latexManager.saveImages(multipartData)
+                call.respondText("success")
             }catch (e: Exception){
                 println(e.stackTraceToString())
                 call.respondText("failure")

@@ -50,7 +50,7 @@ export const LatexNotesScrollableList = () => {
             anchor.remove();
             window.setTimeout(() => URL.revokeObjectURL(fileUrl), 1000);
         } catch {
-            alert('Errore durante il download del PDF.');
+            alert('Errore durante il download del file.');
         } finally {
             setDownloadingId(null);
         }
