@@ -22,6 +22,8 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.jdbc.Database
 import script.DytManager
@@ -82,22 +84,30 @@ fun Application.module() {
 
         get("/display"){
             if(display){
-                val process = ProcessBuilder("sudo", "-n", "systemctl", "restart", "display.service")
-                    .redirectErrorStream(true)
-                    .start()
+                val process = withContext(Dispatchers.IO) {
+                    ProcessBuilder("sudo", "-n", "systemctl", "restart", "display.service")
+                        .redirectErrorStream(true)
+                        .start()
+                }
                 val output = process.inputStream.bufferedReader().readText()
-                val exitCode = process.waitFor()
+                val exitCode = withContext(Dispatchers.IO) {
+                    process.waitFor()
+                }
                 if (exitCode != 0) {
                     println("Display restart failed: $output")
                 }
                 display = !display
                 call.respondText(if (display) "OFF" else "ON")
             }else{
-                val process = ProcessBuilder("sudo", "-n", "systemctl", "stop", "display.service")
-                    .redirectErrorStream(true)
-                    .start()
+                val process = withContext(Dispatchers.IO) {
+                    ProcessBuilder("sudo", "-n", "systemctl", "stop", "display.service")
+                        .redirectErrorStream(true)
+                        .start()
+                }
                 val output = process.inputStream.bufferedReader().readText()
-                val exitCode = process.waitFor()
+                val exitCode = withContext(Dispatchers.IO) {
+                    process.waitFor()
+                }
                 if (exitCode != 0) {
                     println("Display stop failed: $output")
                 }

@@ -1,5 +1,6 @@
 package script
 
+import configuration.LatexConfiguration
 import database.QueryManager
 import io.ktor.http.content.MultiPartData
 import io.ktor.http.content.PartData
@@ -9,7 +10,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-class LatexManager(val connection: Database) {
+class LatexManager(val connection: Database, val latexConf: LatexConfiguration) {
     private val queryManager = QueryManager(connection)
 
     fun saveLatexFile(noteId: Int): String{
@@ -21,7 +22,7 @@ class LatexManager(val connection: Database) {
                 it.id == noteId
             }[0]
 
-            val filePath = "/home/gaia/notes/latex/${noteInfo.title}.tex"
+            val filePath = "${latexConf.cachePath}${noteInfo.title}.tex"
 
             val latexFile = File(filePath)
             latexFile.createNewFile()
@@ -42,7 +43,7 @@ class LatexManager(val connection: Database) {
             println("Generating pdf")
 
             val documentTitle = File(filePath).nameWithoutExtension
-            val pdfOutputDir = File("/home/gaia/notes/pdf/")
+            val pdfOutputDir = File(latexConf.pdfPath)
             if (!pdfOutputDir.exists()) {
                 pdfOutputDir.mkdirs()
             }
@@ -53,7 +54,7 @@ class LatexManager(val connection: Database) {
             }
 
             val process = ProcessBuilder(
-                "/usr/bin/pdflatex",
+                latexConf.engine,
                 "-interaction=nonstopmode",
                 "-halt-on-error",
                 "-output-directory", pdfOutputDir.absolutePath,
@@ -120,7 +121,7 @@ class LatexManager(val connection: Database) {
                 part.dispose()
             }
 
-            val imagesDir = File("/home/gaia/img/$title/")
+            val imagesDir = File("${latexConf.imgPath}$title/")
             if (!imagesDir.exists()) {
                 imagesDir.mkdirs()
             }

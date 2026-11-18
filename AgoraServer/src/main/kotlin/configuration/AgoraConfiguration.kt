@@ -13,4 +13,7 @@ class AgoraConfiguration {
 
     @field:Element(name = "Music", required = true)
     var music: MusicConfiguration? = null
+
+    @field:Element(name = "Latex", required = true)
+    var latex: LatexConfiguration? = null
 }
