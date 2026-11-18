@@ -5,6 +5,9 @@ import org.simpleframework.xml.Root
 
 @Root(name ="Configuration")
 class AgoraConfiguration {
+    @field:Element(name="Log", required = true)
+    var log: String? = null
+
     @field:Element(name = "Database", required = true)
     lateinit var databaseConfig: DatabaseConfiguration
 

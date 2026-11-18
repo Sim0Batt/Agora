@@ -10,12 +10,12 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-class LatexManager(val connection: Database, val latexConf: LatexConfiguration) {
+class LatexManager(val connection: Database, val latexConf: LatexConfiguration, val logger: LoggerWriter) {
     private val queryManager = QueryManager(connection)
 
     fun saveLatexFile(noteId: Int): String{
         try{
-            println("Started .tex file creation")
+            logger.info("Started .tex file creation")
             val content: String = queryManager.getLatexNoteContent(noteId)
 
             val noteInfo = queryManager.getLatexNotesTitles().filter {
@@ -28,19 +28,18 @@ class LatexManager(val connection: Database, val latexConf: LatexConfiguration) 
             latexFile.createNewFile()
             latexFile.writeText(content)
 
-            println("Latex file saved")
+            logger.info("Latex file saved")
 
             return filePath
         }catch (e: Exception){
-            println("Error during file creation: " + e.message)
-            throw e
+            throw Exception("Error during file creation ${e.message}: ${e.stackTraceToString()}")
         }
     }
 
 
     fun generatePdf(filePath: String): File{
         try{
-            println("Generating pdf")
+            logger.info("Generating pdf")
 
             val documentTitle = File(filePath).nameWithoutExtension
             val pdfOutputDir = File(latexConf.pdfPath)
@@ -73,7 +72,7 @@ class LatexManager(val connection: Database, val latexConf: LatexConfiguration) 
 
             if (pdfFile.exists() && pdfFile.length() > 0L) {
                 if (process.exitValue() != 0) {
-                    println(
+                    logger.info(
                         "pdflatex returned non-zero but produced a PDF. " +
                                 "exit=${process.exitValue()}\n$stdout\n$stderr"
                     )
@@ -81,7 +80,7 @@ class LatexManager(val connection: Database, val latexConf: LatexConfiguration) 
                 return pdfFile
             }
 
-            println("Error during latex compile:\n$stdout\n$stderr")
+            logger.error("Error during latex compile:\n$stdout\n$stderr")
             throw Exception("Latex compile failed")
         }catch (e: Exception){
             println(e.message)
@@ -131,6 +130,8 @@ class LatexManager(val connection: Database, val latexConf: LatexConfiguration) 
                 val destination = File(imagesDir, originalName)
                 destination.writeBytes(fileBytes)
             }
+
+            logger.info("Images saved")
         }catch (e: Exception){
             println(e.message)
             throw e

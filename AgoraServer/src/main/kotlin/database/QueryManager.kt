@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
+import script.LoggerWriter
 import server.models.notes.CreateNoteJson
 import server.models.latexnotes.InfoLatexJson
 import server.models.latexnotes.LatexNoteJson
@@ -16,7 +17,7 @@ import server.models.notes.NotesJson
 import server.models.notes.SaveNoteJson
 import java.time.LocalDate
 
-class QueryManager(val connection: Database) {
+class QueryManager(val connection: Database, val logger: LoggerWriter) {
     fun getNotes(): List<NotesJson>{
         val tmp = mutableListOf<NotesJson>()
         transaction (connection){

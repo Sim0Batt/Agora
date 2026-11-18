@@ -9,7 +9,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import server.models.TodoJson
 
-class TodoManager(val connection: Database){
+class TodoManager(val connection: Database, val logger: LoggerWriter){
     fun addTodo(todoJson: TodoJson){
         try{
             transaction(connection) {
@@ -20,8 +20,9 @@ class TodoManager(val connection: Database){
                     it[TodosTable.type] = todoJson.type
                 }
             }
+            logger.info("Todo added")
         }catch (e: Exception){
-            throw e
+            throw Exception("Error while adding todo ${e.message}: ${e.stackTraceToString()}")
         }
     }
 
@@ -32,8 +33,9 @@ class TodoManager(val connection: Database){
                     TodosTable.id eq todoId
                 }
             }
+            logger.info("Todo removed")
         }catch (e: Exception){
-            throw e
+            throw Exception("Error while removing todo ${e.message}: ${e.stackTraceToString()}")
         }
     }
 

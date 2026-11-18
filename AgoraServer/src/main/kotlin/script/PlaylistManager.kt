@@ -17,9 +17,10 @@ import server.models.music.PlaylistJson
 import server.models.music.SongJson
 import java.util.UUID
 
-class PlaylistManager(val connection: Database) {
+class PlaylistManager(val connection: Database, val logger: LoggerWriter) {
     fun createPlaylist(title: String): String{
         try{
+            logger.info("Creating playlist $title")
             return transaction(connection) {
                 PlaylistsTable.insert {
                     it[PlaylistsTable.id] = UUID.randomUUID().toString()
@@ -39,6 +40,7 @@ class PlaylistManager(val connection: Database) {
                     PlaylistsTable.id eq id
                 }
             }
+            logger.info("Removed playlist $id")
         }catch (e: Exception){
             throw Exception("Error while deleting the playlist ${e.message}: ${e.stackTraceToString()}")
         }
@@ -55,6 +57,7 @@ class PlaylistManager(val connection: Database) {
                     it[PlaylistsTable.count] = PlaylistsTable.count + 1
                 }
             }
+            logger.info("Added song $songId to playlist $playlistId")
         }catch (e: Exception){
             throw Exception("Error while inserting the song in the playlist ${e.message}: ${e.stackTraceToString()}")
         }
@@ -106,6 +109,7 @@ class PlaylistManager(val connection: Database) {
                     (PlaylistSongTable.songId eq songId) and (PlaylistSongTable.playlistId eq playlistId)
                 }
             }
+            logger.info("Removed song $songId from playlist $playlistId")
         }catch (e: Exception){
             throw Exception("Error while removing song from playlist ${e.message}: ${e.stackTraceToString()}")
         }

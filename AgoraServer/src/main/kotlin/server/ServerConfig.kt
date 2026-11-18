@@ -9,6 +9,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.application.install
+import io.ktor.server.config.configLoaders
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.autohead.AutoHeadResponse
@@ -22,12 +23,16 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.jdbc.Database
 import script.DytManager
 import script.LatexManager
+import script.LoggerWriter
 import script.PlaylistManager
 import script.SongsManager
 import script.TodoManager
@@ -67,12 +72,14 @@ fun Application.module() {
         password = configuration.databaseConfig.dbPassword
     )
 
-    val queryManager = QueryManager(connection)
-    val latexManager = LatexManager(connection)
-    val todoManager = TodoManager(connection)
-    val songsManager = SongsManager(connection)
-    val playlistManager = PlaylistManager(connection)
-    val dytManager = DytManager(configuration.music!!.ydtEnginePath, configuration.music!!.saveFolder)
+    val logger = LoggerWriter(configuration.log!!, "Agorà")
+
+    val queryManager = QueryManager(connection, logger)
+    val latexManager = LatexManager(connection, configuration.latex!!, logger)
+    val todoManager = TodoManager(connection, logger)
+    val songsManager = SongsManager(connection, logger)
+    val playlistManager = PlaylistManager(connection, logger)
+    val dytManager = DytManager(configuration.music!!.ydtEnginePath, configuration.music!!.saveFolder, logger)
 
     var display = false
 
@@ -94,9 +101,10 @@ fun Application.module() {
                     process.waitFor()
                 }
                 if (exitCode != 0) {
-                    println("Display restart failed: $output")
+                    logger.error("Display restart failed: $output")
                 }
                 display = !display
+                logger.info("Switched display on")
                 call.respondText(if (display) "OFF" else "ON")
             }else{
                 val process = withContext(Dispatchers.IO) {
@@ -109,9 +117,10 @@ fun Application.module() {
                     process.waitFor()
                 }
                 if (exitCode != 0) {
-                    println("Display stop failed: $output")
+                    logger.error("Display stop failed: $output")
                 }
                 display = !display
+                logger.info("Switched display on")
                 call.respondText(if (display) "OFF" else "ON")
             }
         }
@@ -120,7 +129,7 @@ fun Application.module() {
         //Notes Management
         get("/note") {
             val result = queryManager.getNotes().joinToString(";\n")
-            println(result)
+            logger.info(result)
             call.respondText(result)
         }
 
@@ -144,7 +153,7 @@ fun Application.module() {
 
         post("/content/{id}"){
             val noteId = call.parameters["id"]?.toIntOrNull() ?: -1
-            println(queryManager.getNotesContent(noteId))
+            logger.info(queryManager.getNotesContent(noteId))
             call.respondText(
                 ContentJson(
                     queryManager.getNotesContent(noteId),
@@ -158,7 +167,10 @@ fun Application.module() {
                 val noteId = queryManager.createLatexNote(input)
                 call.respond(noteId)
             }catch (e: Exception){
-                println(e.stackTraceToString())
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respondText("failure")
             }
         }
@@ -166,10 +178,13 @@ fun Application.module() {
         get("/latex/list"){
             try {
                 val result = queryManager.getLatexNotesTitles()
-                println(result)
+                logger.info(result.joinToString("\n"))
                 call.respond(result)
             }catch (e: Exception){
-                println(e.stackTraceToString())
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respondText("failure")
             }
         }
@@ -179,7 +194,10 @@ fun Application.module() {
             try {
                 call.respondText(queryManager.getLatexNoteContent(noteId))
             }catch (e: Exception){
-                println(e.stackTraceToString())
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respondText("failure")
             }
         }
@@ -190,7 +208,10 @@ fun Application.module() {
                 queryManager.deleteLatexNote(noteId)
                 call.respondText("success")
             }catch (e: Exception){
-                println(e.stackTraceToString())
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respondText("failure")
             }
         }
@@ -201,7 +222,11 @@ fun Application.module() {
                 queryManager.updateLatexNote(notesJson)
                 call.respondText("Note updated")
             }catch (e: Exception){
-                println(e.stackTraceToString())
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+
+                logger.error(e.message!!)
                 call.respondText("failure")
             }
         }
@@ -213,7 +238,11 @@ fun Application.module() {
                 val pdf = latexManager.generatePdf(filePath)
                 call.respondFile(pdf)
             }catch (e: Exception){
-                println(e.stackTraceToString())
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+
+                logger.error(e.message!!)
                 call.respondText("failure")
             }
         }
@@ -224,7 +253,10 @@ fun Application.module() {
                 latexManager.saveImages(multipartData)
                 call.respondText("success")
             }catch (e: Exception){
-                println(e.stackTraceToString())
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respondText("failure")
             }
         }
@@ -233,6 +265,10 @@ fun Application.module() {
             try {
                 call.respond(todoManager.getTodos())
             }catch (e: Exception){
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respond("Error during todo retrieve")
             }
         }
@@ -243,6 +279,10 @@ fun Application.module() {
                 todoManager.addTodo(todoJson)
                 call.respond(HttpStatusCode.OK)
             }catch (e: Exception){
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respond("Error during todo creation")
             }
         }
@@ -253,6 +293,9 @@ fun Application.module() {
                 todoManager.removeTodo(todoId!!.toInt())
                 call.respond(HttpStatusCode.OK)
             }catch (e: Exception){
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
                 call.respond("Error during todo delete")
             }
         }
@@ -261,18 +304,24 @@ fun Application.module() {
             try{
                 call.respond(todoManager.getOrgTodos())
             }catch (e: Exception){
-                call.respond("Error during Org Extraction")
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                call.respond(e.message!!)
             }
         }
 
         post("/music/search") {
             val input = call.receive<MusicSearchJson>()
             try{
-                println("Started searching for: ${input.title}")
+                logger.info("Started searching for: ${input.title}")
                 call.respond(dytManager.search(input.title))
             }catch (e: Exception){
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
                 call.respond(HttpStatusCode.BadRequest)
-                error("Error during search of media ${e.message}: ${e.stackTraceToString()}")
+                logger.error("Error during search of media ${e.message}: ${e.stackTraceToString()}")
             }
         }
         post("/music/download") {
@@ -282,7 +331,10 @@ fun Application.module() {
                 songsManager.saveSong(input.title, input.author, input.duration, "${configuration.music!!.saveFolder}/${input.id}.webm")
                 call.respond("OK")
             } catch (e: Exception) {
-                println("Download error: ${e.message}")
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "Download fallito")
             }
         }
@@ -292,8 +344,11 @@ fun Application.module() {
             try {
                 songsManager.deleteSong(songId)
                 call.respond("OK")
-            } catch (e: Exception) {
-                println("Download error: ${e.message}")
+            } catch (e: Exception){
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "Download fallito")
             }
         }
@@ -302,7 +357,10 @@ fun Application.module() {
             try {
                 call.respond(songsManager.getSongs())
             }catch (e: Exception){
-                println(e.message)
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respond(HttpStatusCode.InternalServerError)
             }
         }
@@ -313,7 +371,10 @@ fun Application.module() {
                 playlistManager.createPlaylist(input.title)
                 call.respond("OK")
             }catch (e: Exception){
-                println(e.message)
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respond(HttpStatusCode.InternalServerError)
             }
         }
@@ -329,7 +390,10 @@ fun Application.module() {
                 playlistManager.addSong(playlistId, songId)
                 call.respond("OK")
             }catch (e: Exception){
-                println(e.message)
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respond(HttpStatusCode.InternalServerError)
             }
         }
@@ -339,7 +403,10 @@ fun Application.module() {
                 val playlistId = call.parameters["playlistId"]!!
                 call.respond(playlistManager.getSongsForPlaylist(playlistId))
             }catch (e: Exception){
-                println(e.message)
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respond(HttpStatusCode.InternalServerError)
             }
         }
@@ -350,7 +417,10 @@ fun Application.module() {
                 playlistManager.removePlaylist(playlistId)
                 call.respond("OK")
             }catch (e: Exception){
-                println(e.message)
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respond(HttpStatusCode.InternalServerError)
             }
         }
@@ -362,7 +432,10 @@ fun Application.module() {
                 playlistManager.removeSongFromPlaylist(songId, playlistId)
                 call.respond("OK")
             }catch (e: Exception){
-                println(e.message)
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respond(HttpStatusCode.InternalServerError)
             }
         }
@@ -372,14 +445,21 @@ fun Application.module() {
             try {
                 val songs = dytManager.import(input.url)
                 val playlistId = playlistManager.createPlaylist(input.title)
+                val count = songs.size
+                var counter = 0
                 songs.forEach { song: SongJson ->
                     dytManager.download(song.url)
                     val songId = songsManager.saveSong(song.title, song.author, song.duration, "${configuration.music!!.saveFolder}/${song.id}.webm")
                     playlistManager.addSong(playlistId, songId)
+                    counter++
+                    logger.info("Imported song $counter of $count")
                 }
                 call.respond("OK")
             }catch (e: Exception){
-                println(e.message)
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
                 call.respond(HttpStatusCode.InternalServerError)
             }
         }
@@ -389,9 +469,9 @@ fun Application.module() {
         get("/songs/{id}/stream") {
             val id = call.parameters["id"]!!
             val path = songsManager.getSongPath(id)
-            val file = path?.let { File(it) }
+            val file = path.let { File(it) }
 
-            if (file == null || !file.isFile) {
+            if (!file.isFile) {
                 call.respond(HttpStatusCode.NotFound)
                 return@get
             }

@@ -5,8 +5,9 @@ import server.models.music.SongJson
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-class DytManager (val enginePath: String, val saveFolder: String){
+class DytManager (val enginePath: String, val saveFolder: String, val logger: LoggerWriter){
     fun search(title: String): List<SongJson>{
+        logger.info("Started search for song $title")
         var errorReader: BufferedReader? = null
         try{
             val process = ProcessBuilder(
@@ -27,6 +28,7 @@ class DytManager (val enginePath: String, val saveFolder: String){
     }
 
     fun download(url: String){
+        logger.info("Started download for song url $url")
         var errorReader: BufferedReader? = null
         try{
             val process = ProcessBuilder(
@@ -48,6 +50,7 @@ class DytManager (val enginePath: String, val saveFolder: String){
 
     fun import(url: String): List<SongJson>{
         var errorReader: BufferedReader? = null
+        logger.info("Started import of playlist")
         try{
             val process = ProcessBuilder(
                 "/usr/bin/python",

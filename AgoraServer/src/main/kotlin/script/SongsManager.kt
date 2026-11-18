@@ -11,8 +11,9 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import server.models.music.SongJson
 import java.io.File
 import java.util.UUID
+import java.util.logging.Logger
 
-class SongsManager(val connection: Database) {
+class SongsManager(val connection: Database, val logger: LoggerWriter) {
     fun saveSong(title: String, author: String, duration: Int, path: String): String {
         val songId = UUID.randomUUID().toString()
         try{
@@ -25,6 +26,7 @@ class SongsManager(val connection: Database) {
                     it[SongsTable.id] = songId
                 }
             }
+            logger.info("Song $songId saved")
             return songId
         }catch (e: Exception){
             throw Exception("Error during song save ${e.message}: ${e.stackTraceToString()}")
@@ -69,6 +71,7 @@ class SongsManager(val connection: Database) {
             transaction(connection){
                 SongsTable.deleteWhere { SongsTable.id eq id }
             }
+            logger.info("Song $id deleted")
         }catch (e: Exception){
             throw Exception("Error retrieving songs ${e.message}: ${e.stackTraceToString()}")
         }
