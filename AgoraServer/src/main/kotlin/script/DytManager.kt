@@ -5,13 +5,13 @@ import server.models.music.SongJson
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-class DytManager (val enginePath: String, val saveFolder: String, val logger: LoggerWriter){
+class DytManager (val python: String, val enginePath: String, val saveFolder: String, val logger: LoggerWriter){
     fun search(title: String): List<SongJson>{
         logger.info("Started search for song $title")
         var errorReader: BufferedReader? = null
         try{
             val process = ProcessBuilder(
-                "/usr/bin/python",
+                python,
                 enginePath + "yt_search.py",
                 title
             ).redirectErrorStream(true).start()
@@ -32,7 +32,7 @@ class DytManager (val enginePath: String, val saveFolder: String, val logger: Lo
         var errorReader: BufferedReader? = null
         try{
             val process = ProcessBuilder(
-                "/usr/bin/python",
+                python,
                 enginePath + "yt_download.py",
                 url,
                 saveFolder
@@ -53,7 +53,7 @@ class DytManager (val enginePath: String, val saveFolder: String, val logger: Lo
         logger.info("Started import of playlist")
         try{
             val process = ProcessBuilder(
-                "/usr/bin/python",
+                python,
                 enginePath + "yt_playlist.py",
                 url
             ).redirectErrorStream(true).start()

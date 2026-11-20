@@ -15,6 +15,7 @@ import server.models.latexnotes.InfoLatexJson
 import server.models.latexnotes.LatexNoteJson
 import server.models.notes.NotesJson
 import server.models.notes.SaveNoteJson
+import java.io.File
 import java.time.LocalDate
 
 class QueryManager(val connection: Database, val logger: LoggerWriter) {
@@ -73,6 +74,8 @@ class QueryManager(val connection: Database, val logger: LoggerWriter) {
     }
 
 
+
+
     fun createLatexNote(latexNoteJson: LatexNoteJson): Int{
         val initialLatex = """
 \documentclass{article}
@@ -120,7 +123,7 @@ class QueryManager(val connection: Database, val logger: LoggerWriter) {
 
 
 \title{${latexNoteJson.title}}
-\author{AUTHOR_NAME}
+\author{AUTHOR\_NAME}
 \date{${LocalDate.now()}}
 
 \begin{document}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { latexApi } from '../api/latex';
+import { ErrorDialog } from './ErrorDialog';
 
 interface NoteRecord {
     id: number;
@@ -9,11 +10,30 @@ interface NoteRecord {
     type: string;
 }
 
-export const LatexNotesScrollableList = () => {
+export const LatexNotesScrollableList = ({ refreshKey = 0 }: { refreshKey?: number }) => {
     const [notes, setNotes] = useState<NoteRecord[]>([]);
     const [titleSearch, setTitleSearch] = useState('');
     const [downloadingId, setDownloadingId] = useState<number | null>(null);
+    const [downloadError, setDownloadError] = useState<string | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<NoteRecord | null>(null);
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
     const navigate = useNavigate();
+
+    const handleDelete = async () => {
+        if (!confirmDelete || deleting) return;
+        setDeleting(true);
+        try {
+            await latexApi.deleteNote(confirmDelete.id);
+            setNotes((prev) => prev.filter((n) => n.id !== confirmDelete.id));
+            setConfirmDelete(null);
+        } catch (err) {
+            setConfirmDelete(null);
+            setDeleteError(err instanceof Error ? err.message : 'Eliminazione della nota fallita.');
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     useEffect(() => {
         const fetchNotes = async () => {
@@ -26,7 +46,7 @@ export const LatexNotesScrollableList = () => {
             setNotes(formattedData);
         };
         fetchNotes();
-    }, []);
+    }, [refreshKey]);
 
     const filteredRecords = useMemo(() => {
         const q = titleSearch.trim().toUpperCase();
@@ -49,8 +69,8 @@ export const LatexNotesScrollableList = () => {
             anchor.click();
             anchor.remove();
             window.setTimeout(() => URL.revokeObjectURL(fileUrl), 1000);
-        } catch {
-            alert('Errore durante il download del file.');
+        } catch (err) {
+            setDownloadError(err instanceof Error ? err.message : 'Errore durante il download del file.');
         } finally {
             setDownloadingId(null);
         }
@@ -107,13 +127,54 @@ export const LatexNotesScrollableList = () => {
                                 >
                                     {downloadingId === record.id ? 'Download…' : 'Scarica PDF'}
                                 </button>
-                                <span className="text-xs text-text-muted group-hover:text-accent transition-colors">
-                                    Apri →
-                                </span>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setConfirmDelete(record);
+                                    }}
+                                    className="px-3 py-1 text-xs font-medium rounded border border-border text-text-muted hover:border-red-400 hover:text-red-400 transition-colors cursor-pointer"
+                                >
+                                    Elimina
+                                </button>
                             </div>
                         </li>
                     ))}
                 </ul>
+            )}
+            {confirmDelete && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4"
+                    onClick={() => !deleting && setConfirmDelete(null)}
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full max-w-sm space-y-4 rounded-xl border border-border bg-surface-alt p-6"
+                    >
+                        <p>Eliminare la nota "{confirmDelete.title}"? L'operazione non è reversibile.</p>
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setConfirmDelete(null)}
+                                disabled={deleting}
+                                className="rounded-lg border border-border px-4 py-2 transition-colors hover:border-accent disabled:opacity-50"
+                            >
+                                Annulla
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                disabled={deleting}
+                                className="rounded-lg bg-red-500 px-5 py-2 font-semibold text-white transition-colors hover:bg-red-600 disabled:opacity-50"
+                            >
+                                {deleting ? 'Eliminazione…' : 'Elimina'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {deleteError && (
+                <ErrorDialog title="Eliminazione fallita" message={deleteError} onClose={() => setDeleteError(null)} />
+            )}
+            {downloadError && (
+                <ErrorDialog title="Download PDF fallito" message={downloadError} onClose={() => setDownloadError(null)} />
             )}
         </div>
     );

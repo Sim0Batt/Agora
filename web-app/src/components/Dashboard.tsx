@@ -7,6 +7,7 @@ export const DashBoard = () => {
         'Notes': '/notes',
         'Latex Editor': '/latex',
         'Musica': '/music',
+        'Playlist': '/music/playlists',
         'Copia in LaTeX': '/notes/copy-to-latex',
         'Settings': '/dashboard/user',
     };

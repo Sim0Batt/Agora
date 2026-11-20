@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { API_BASE_URL } from '../api/config';
 import { useMusic, type QueueItem } from '../context/musicContext';
 import { QueuePanel } from './QueuePanel';
+import { NowPlaying } from './NowPlaying';
+import { Cover } from './Cover';
 import {
   ChevronDownIcon,
   CloseIcon,
@@ -56,10 +58,12 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
   const { queue, index, shuffle, repeat, hidden, next, prev, toggleShuffle, cycleRepeat, setHidden, close } =
     useMusic();
   const [failedUid, setFailedUid] = useState<number | null>(null);
+  const failures = useRef(0);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [queueOpen, setQueueOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   const item = queue[index];
   const song = item?.song;
@@ -105,7 +109,18 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
     const onDuration = () => setDuration(Number.isFinite(player.duration) ? player.duration : 0);
     const onPlay = () => setPlaying(true);
     const onPause = () => setPlaying(false);
-    const onError = () => setFailedUid(Number(player.dataset.uid));
+    const onError = () => {
+      const uid = Number(player.dataset.uid);
+      setFailedUid(uid);
+      // Passa al brano successivo, ma si ferma se tutta la coda è fallita di fila o non c'è un successivo
+      failures.current += 1;
+      if (failures.current >= queue.length) return;
+      const target = next();
+      if (target && target.uid !== uid) loadItem(target);
+    };
+    const onPlaying = () => {
+      failures.current = 0;
+    };
     const onEnded = () => {
       if (repeat === 'one' || ((repeat === 'all' || shuffle) && queue.length === 1)) {
         player.currentTime = 0;
@@ -119,6 +134,7 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
     player.addEventListener('play', onPlay);
     player.addEventListener('pause', onPause);
     player.addEventListener('error', onError);
+    player.addEventListener('playing', onPlaying);
     player.addEventListener('ended', onEnded);
     return () => {
       player.removeEventListener('timeupdate', onTime);
@@ -126,9 +142,10 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
       player.removeEventListener('play', onPlay);
       player.removeEventListener('pause', onPause);
       player.removeEventListener('error', onError);
+      player.removeEventListener('playing', onPlaying);
       player.removeEventListener('ended', onEnded);
     };
-  }, [repeat, shuffle, queue.length, goNext]);
+  }, [repeat, shuffle, queue.length, goNext, next]);
 
   useEffect(() => {
     if (!song || !('mediaSession' in navigator)) return;
@@ -157,6 +174,7 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
 
   const handleClose = () => {
     setQueueOpen(false);
+    setExpanded(false);
     close();
   };
 
@@ -164,6 +182,32 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
     if (player.paused) void player.play();
     else player.pause();
   };
+
+  const nowPlaying = expanded ? (
+    <NowPlaying
+      song={song}
+      playing={playing}
+      error={error}
+      time={time}
+      duration={duration}
+      hasPrev={hasPrev}
+      hasNext={hasNext}
+      shuffle={shuffle}
+      repeat={repeat}
+      queueCount={queue.length}
+      onSeek={(t) => {
+        player.currentTime = t;
+        setTime(t);
+      }}
+      onTogglePlay={togglePlay}
+      onPrev={goPrev}
+      onNext={goNext}
+      onToggleShuffle={toggleShuffle}
+      onCycleRepeat={cycleRepeat}
+      onStop={handleClose}
+      onClose={() => setExpanded(false)}
+    />
+  ) : null;
 
   const hide = () => {
     setQueueOpen(false);
@@ -259,14 +303,23 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
 
   if (compact) {
     return (
+      <>
       <div className="fixed bottom-3 right-3 z-40 flex max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-full border border-border bg-surface-alt/90 px-3 py-1.5 opacity-60 shadow-lg backdrop-blur transition-opacity focus-within:opacity-100 hover:opacity-100">
         {queueOpen && <QueuePanel
             onClear={handleClose}
             className="absolute bottom-full right-0 mb-2 w-80 max-w-[calc(100vw-1.5rem)]"
           />}
-        <span className="hidden max-w-40 truncate text-xs text-text sm:inline" title={`${song.title} – ${song.author}`}>
+        <button
+          onClick={() => setExpanded(true)}
+          aria-label="Apri schermata di riproduzione"
+          className="hidden max-w-40 truncate text-xs text-text hover:text-accent sm:inline"
+          title={`${song.title} – ${song.author}`}
+        >
           {error ? 'Errore di riproduzione' : song.title}
-        </span>
+        </button>
+        <button onClick={() => setExpanded(true)} aria-label="Apri schermata di riproduzione" className={btn}>
+          <ChevronDownIcon className="h-4 w-4 rotate-180" />
+        </button>
         <button onClick={goPrev} disabled={!hasPrev} aria-label="Precedente" className={btn}>
           <PrevIcon />
         </button>
@@ -284,6 +337,8 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
           <CloseIcon />
         </button>
       </div>
+      {nowPlaying}
+      </>
     );
   }
 
@@ -297,11 +352,18 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
       )}
       {/* Mobile: info + chiudi, audio a tutta larghezza, poi i pulsanti. Desktop: tutto su una riga. */}
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 sm:gap-4">
-        <div className="order-1 min-w-0 flex-1 basis-0 sm:basis-48">
-          <p className="truncate font-medium text-text">{song.title}</p>
-          <p className="truncate text-sm text-text-muted">{song.author}</p>
-          {error && <p className="text-sm text-red-400">Impossibile riprodurre il brano.</p>}
-        </div>
+        <button
+          onClick={() => setExpanded(true)}
+          aria-label="Apri schermata di riproduzione"
+          className="order-1 flex min-w-0 flex-1 basis-0 items-center gap-3 text-left sm:basis-48"
+        >
+          <Cover seed={song.title} className="h-12 w-12" iconClass="h-5 w-5" />
+          <span className="min-w-0">
+            <span className="block truncate font-medium text-text">{song.title}</span>
+            <span className="block truncate text-sm text-text-muted">{song.author}</span>
+            {error && <span className="block text-sm text-red-400">Impossibile riprodurre il brano.</span>}
+          </span>
+        </button>
         {hideBtn('order-2 sm:order-10')}
         <button
           onClick={handleClose}
@@ -332,6 +394,7 @@ export const MusicPlayer = ({ compact }: MusicPlayerProps) => {
         {repeatBtn('order-6 flex-1 sm:order-7 sm:flex-none')}
         {queueBtn('order-7 flex-1 sm:order-8 sm:flex-none')}
       </div>
+      {nowPlaying}
     </div>
   );
 };

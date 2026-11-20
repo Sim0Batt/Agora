@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import { MusicPlayer } from './MusicPlayer';
+import { ImportStatus } from './ImportStatus';
 import { useMusic } from '../context/musicContext';
 
 const COMPACT_ROUTES = ['/notes/editor', '/latex/editor', '/notes/copy-to-latex'];
@@ -15,6 +16,7 @@ export const RootLayout = () => {
       <div className={showFullBar ? 'pb-56 sm:pb-28' : ''}>
         <Outlet />
       </div>
+      <ImportStatus />
       <MusicPlayer compact={compact} />
     </>
   );

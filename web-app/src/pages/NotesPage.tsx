@@ -5,6 +5,7 @@ import { CreateNoteDialog } from '../components/CreateNoteDialog';
 
 export const NotesPage = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -18,12 +19,12 @@ export const NotesPage = () => {
                 </button>
             </div>
             <div className="flex-1 p-10">
-                <NotesScrollableList />
+                <NotesScrollableList refreshKey={refreshKey} />
             </div>
             {dialogOpen && (
                 <CreateNoteDialog
                     onClose={() => setDialogOpen(false)}
-                    onCreated={() => setDialogOpen(false)}
+                    onCreated={() => setRefreshKey((k) => k + 1)}
                 />
             )}
         </div>

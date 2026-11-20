@@ -9,7 +9,7 @@ interface NoteListItem {
     length: number;
 }
 
-export const NotesScrollableList = () => {
+export const NotesScrollableList = ({ refreshKey = 0 }: { refreshKey?: number }) => {
     const [notes, setNotes] = useState<NoteListItem[]>([]);
     const [titleSearch, setTitleSearch] = useState('');
     const navigate = useNavigate();
@@ -40,7 +40,7 @@ export const NotesScrollableList = () => {
             setNotes(items);
         };
         fetchNotes();
-    }, []);
+    }, [refreshKey]);
 
     const filteredRecords = useMemo(() => {
         const q = titleSearch.trim().toUpperCase();

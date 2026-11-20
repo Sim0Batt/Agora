@@ -1,9 +1,11 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { DashBoard } from '../components/Dashboard';
 import { useParams } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import { latexApi } from '../api/latex';
 import LatexEditorPanel from '../components/LatexEditorPanel';
+import { ErrorDialog } from '../components/ErrorDialog';
+import { LatexImagesDialog } from '../components/LatexImagesDialog';
 
 // ─── COMPONENT ──────────────────────────────────────────────────────────────
 
@@ -34,11 +36,11 @@ export default function LatexEditor() {
     const [code, setCode] = useState(DEFAULT_LATEX);
     const [noteTitle, setNoteTitle] = useState('');
     const [compiling, setCompiling] = useState(false);
-    const [uploadingImages, setUploadingImages] = useState(false);
+    const [imagesOpen, setImagesOpen] = useState(false);
     const [downloadingPdf, setDownloadingPdf] = useState(false);
+    const [downloadError, setDownloadError] = useState<string | null>(null);
     const [compileLog, setCompileLog] = useState<string | null>(null);
     const [logVisible, setLogVisible] = useState(false);
-    const imageInputRef = useRef<HTMLInputElement | null>(null);
 
     // ── Compilazione: salva + pdflatex ──────────────────────────────────
     const compilePdf = useCallback(async () => {
@@ -50,7 +52,9 @@ export default function LatexEditor() {
             setLogVisible(true);
         } catch (err: unknown) {
             const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-                ?? 'Errore di connessione al server.';
+                ?? ((err as { code?: string })?.code === 'ERR_BACKEND_FAILURE'
+                    ? 'Operazione fallita sul server.'
+                    : 'Errore di connessione al server.');
             setCompileLog(`ERRORE: ${msg}`);
             setLogVisible(true);
         } finally {
@@ -72,26 +76,10 @@ export default function LatexEditor() {
             anchor.click();
             anchor.remove();
             window.setTimeout(() => URL.revokeObjectURL(fileUrl), 1000);
+        } catch (err) {
+            setDownloadError(err instanceof Error ? err.message : 'Errore durante il download del file.');
         } finally {
             setDownloadingPdf(false);
-        }
-    }, [id, noteTitle]);
-
-    const openImagePicker = useCallback(() => {
-        imageInputRef.current?.click();
-    }, []);
-
-    const handleImagesSelected = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(event.target.files ?? []);
-        event.target.value = '';
-
-        if (!files.length || !id) return;
-
-        setUploadingImages(true);
-        try {
-            await latexApi.uploadImages(noteTitle || `latex-${id}`, files);
-        } finally {
-            setUploadingImages(false);
         }
     }, [id, noteTitle]);
 
@@ -126,20 +114,11 @@ export default function LatexEditor() {
                     </button>
                 )}
                 <button
-                    onClick={openImagePicker}
-                    disabled={uploadingImages}
-                    className="px-4 py-1.5 text-sm font-medium rounded border border-border hover:bg-surface-alt transition-colors cursor-pointer disabled:opacity-50"
+                    onClick={() => setImagesOpen(true)}
+                    className="px-4 py-1.5 text-sm font-medium rounded border border-border hover:bg-surface-alt transition-colors cursor-pointer"
                 >
-                    {uploadingImages ? 'Caricamento…' : 'Carica immagini'}
+                    Immagini
                 </button>
-                <input
-                    ref={imageInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={handleImagesSelected}
-                />
                 <button
                     onClick={downloadPdf}
                     disabled={downloadingPdf}
@@ -164,6 +143,14 @@ export default function LatexEditor() {
                     onSave={compilePdf}
                 />
             </div>
+
+            {downloadError && (
+                <ErrorDialog title="Download PDF fallito" message={downloadError} onClose={() => setDownloadError(null)} />
+            )}
+
+            {imagesOpen && (
+                <LatexImagesDialog title={noteTitle || `latex-${id}`} onClose={() => setImagesOpen(false)} />
+            )}
 
             {/* ── Log di compilazione ─────────────────────────────────── */}
             {logVisible && compileLog && (

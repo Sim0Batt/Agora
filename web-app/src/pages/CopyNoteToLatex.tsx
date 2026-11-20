@@ -165,7 +165,9 @@ export default function CopyNoteToLatex() {
         } catch (err: unknown) {
             const msg =
                 (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
-                'Errore di connessione al server.';
+                ((err as { code?: string })?.code === 'ERR_BACKEND_FAILURE'
+                    ? 'Operazione fallita sul server.'
+                    : 'Errore di connessione al server.');
             setSaveLog(`ERRORE: ${msg}`);
         } finally {
             setSaving(false);

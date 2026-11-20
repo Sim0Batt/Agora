@@ -6,6 +6,8 @@ import { NotesPage } from './pages/NotesPage';
 import NoteEditor from './pages/NoteEditor';
 import CopyNoteToLatex from './pages/CopyNoteToLatex';
 import { MusicPage } from './pages/MusicPage';
+import { PlaylistsPage } from './pages/PlaylistsPage';
+import { PlaylistDetailPage } from './pages/PlaylistDetailPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { RootLayout } from './components/RootLayout';
 import { MusicProvider } from './context/MusicProvider';
@@ -41,6 +43,14 @@ const router = createBrowserRouter([
       {
         path: '/music',
         element: <MusicPage />,
+      },
+      {
+        path: '/music/playlists',
+        element: <PlaylistsPage />,
+      },
+      {
+        path: '/music/playlists/:id',
+        element: <PlaylistDetailPage />,
       },
       {
         path: '/dashboard/user',

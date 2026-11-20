@@ -66,7 +66,7 @@ fun Application.module() {
 
 
     val connection = Database.connect(
-        url = configuration.databaseConfig!!.dbConnectionString,
+        url = configuration.databaseConfig.dbConnectionString,
         driver = configuration.databaseConfig.dbDriver,
         user = configuration.databaseConfig.dbUser,
         password = configuration.databaseConfig.dbPassword
@@ -79,7 +79,7 @@ fun Application.module() {
     val todoManager = TodoManager(connection, logger)
     val songsManager = SongsManager(connection, logger)
     val playlistManager = PlaylistManager(connection, logger)
-    val dytManager = DytManager(configuration.music!!.ydtEnginePath, configuration.music!!.saveFolder, logger)
+    val dytManager = DytManager(configuration.music!!.python, configuration.music!!.ydtEnginePath, configuration.music!!.saveFolder, logger)
 
     var display = false
 
@@ -171,7 +171,7 @@ fun Application.module() {
                     currentCoroutineContext().ensureActive()
                 }
                 logger.error(e.message!!)
-                call.respondText("failure")
+                call.respondText("FA")
             }
         }
 
@@ -185,7 +185,7 @@ fun Application.module() {
                     currentCoroutineContext().ensureActive()
                 }
                 logger.error(e.message!!)
-                call.respondText("failure")
+                call.respondText("FA")
             }
         }
 
@@ -198,7 +198,7 @@ fun Application.module() {
                     currentCoroutineContext().ensureActive()
                 }
                 logger.error(e.message!!)
-                call.respondText("failure")
+                call.respondText("FA")
             }
         }
 
@@ -212,7 +212,7 @@ fun Application.module() {
                     currentCoroutineContext().ensureActive()
                 }
                 logger.error(e.message!!)
-                call.respondText("failure")
+                call.respondText("FA")
             }
         }
 
@@ -227,7 +227,7 @@ fun Application.module() {
                 }
 
                 logger.error(e.message!!)
-                call.respondText("failure")
+                call.respondText("FA")
             }
         }
 
@@ -243,7 +243,22 @@ fun Application.module() {
                 }
 
                 logger.error(e.message!!)
-                call.respondText("failure")
+                call.respondText(e.message!!)
+            }
+        }
+
+
+        delete("/latex/{title}"){
+            try{
+                val title = call.parameters["title"]
+                latexManager.deleteLatexNote(title!!)
+                call.respond("OK")
+            }catch (e: Exception){
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
+                call.respondText("FA")
             }
         }
 
@@ -257,7 +272,20 @@ fun Application.module() {
                     currentCoroutineContext().ensureActive()
                 }
                 logger.error(e.message!!)
-                call.respondText("failure")
+                call.respondText("FA")
+            }
+        }
+
+        get("/latex/image/{title}"){
+            try{
+                val title = call.parameters["title"]
+                call.respond(latexManager.getSavedImages(title!!))
+            }catch (e: Exception){
+                if (e is CancellationException) {
+                    currentCoroutineContext().ensureActive()
+                }
+                logger.error(e.message!!)
+                call.respondText("FA")
             }
         }
 

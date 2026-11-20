@@ -10,4 +10,7 @@ MusicConfiguration {
 
     @field:Element(name = "SavePath", required = false)
     var saveFolder: String = ""
+
+    @field:Element(name = "Python", required = false)
+    var python: String = ""
 }

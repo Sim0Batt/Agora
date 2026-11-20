@@ -5,6 +5,7 @@ import { CreateLatexNoteDialog } from '../components/CreateLatexNoteDialog';
 
 export const LatexNotes = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -18,12 +19,12 @@ export const LatexNotes = () => {
                 </button>
             </div>
             <div className="flex-1 p-10">
-                <LatexNotesScrollableList />
+                <LatexNotesScrollableList refreshKey={refreshKey} />
             </div>
             {dialogOpen && (
                 <CreateLatexNoteDialog
                     onClose={() => setDialogOpen(false)}
-                    onCreated={() => setDialogOpen(false)}
+                    onCreated={() => setRefreshKey((k) => k + 1)}
                 />
             )}
         </div>
